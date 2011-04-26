@@ -1,39 +1,18 @@
 <?php
 /**
-* @version		$Id: weblinks.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla
-* @subpackage	Weblinks
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: weblinks.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Site
+ * @subpackage	com_weblinks
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// no direct access
-defined('_JEXEC') or die('Restricted access');
+// No direct access.
+defined('_JEXEC') or die;
 
-// Require the base controller
-require_once (JPATH_COMPONENT.DS.'controller.php');
+jimport('joomla.application.component.controller');
+require_once JPATH_COMPONENT.'/helpers/route.php';
 
-// Require specific controller if requested
-if($controller = JRequest::getWord('controller')) {
-	$path = JPATH_COMPONENT.DS.'controllers'.DS.$controller.'.php';
-	if (file_exists($path)) {
-		require_once $path;
-	} else {
-		$controller = '';
-	}
-}
-
-// Create the controller
-$classname	= 'WeblinksController'.ucfirst($controller);
-$controller = new $classname( );
-
-// Perform the Request task
+$controller	= JController::getInstance('Weblinks');
 $controller->execute(JRequest::getCmd('task'));
-
-// Redirect if set by the controller
 $controller->redirect();

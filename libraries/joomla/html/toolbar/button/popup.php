@@ -1,24 +1,19 @@
 <?php
 /**
-* @version		$Id: popup.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	HTML
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: popup.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Framework
+ * @subpackage	HTML
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Renders a popup window button
  *
- * @package 	Joomla.Framework
+ * @package		Joomla.Framework
  * @subpackage		HTML
  * @since		1.5
  */
@@ -30,18 +25,18 @@ class JButtonPopup extends JButton
 	 * @access	protected
 	 * @var		string
 	 */
-	var $_name = 'Popup';
+	protected $_name = 'Popup';
 
-	function fetchButton( $type='Popup', $name = '', $text = '', $url = '', $width=640, $height=480, $top=0, $left=0 )
+	public function fetchButton($type='Popup', $name = '', $text = '', $url = '', $width=640, $height=480, $top=0, $left=0, $onClose = '')
 	{
-		JHTML::_('behavior.modal');
+		JHtml::_('behavior.modal');
 
 		$text	= JText::_($text);
 		$class	= $this->fetchIconClass($name);
 		$doTask	= $this->_getCommand($name, $url, $width, $height, $top, $left);
 
-		$html	= "<a class=\"modal\" href=\"$doTask\" rel=\"{handler: 'iframe', size: {x: $width, y: $height}}\">\n";
-		$html .= "<span class=\"$class\" title=\"$text\">\n";
+		$html	= "<a class=\"modal\" href=\"$doTask\" rel=\"{handler: 'iframe', size: {x: $width, y: $height}, onClose: function() {".$onClose."}}\">\n";
+		$html .= "<span class=\"$class\">\n";
 		$html .= "</span>\n";
 		$html	.= "$text\n";
 		$html	.= "</a>\n";
@@ -59,9 +54,9 @@ class JButtonPopup extends JButton
 	 * @return		string	Button CSS Id
 	 * @since		1.5
 	 */
-	function fetchId($name)
+	public function fetchId($type, $name)
 	{
-		return $this->_parent->_name.'-'."popup-$name";
+		return $this->_parent->getName().'-'."popup-$name";
 	}
 
 	/**
@@ -72,7 +67,7 @@ class JButtonPopup extends JButton
 	 * @return	string	JavaScript command string
 	 * @since	1.5
 	 */
-	function _getCommand($name, $url, $width, $height, $top, $left)
+	protected function _getCommand($name, $url, $width, $height, $top, $left)
 	{
 		if (substr($url, 0, 4) !== 'http') {
 			$url = JURI::base().$url;

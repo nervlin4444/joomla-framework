@@ -1,36 +1,84 @@
 <?php
 /**
-* @version		$Id: index.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla
-* @subpackage	Installation
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software and parts of it may contain or be derived from the
-* GNU General Public License or other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: index.php 20806 2011-02-21 19:44:59Z dextercowley $
+ * @package		Joomla.Installation
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-define( '_JEXEC', 1 );
-
-define( 'JPATH_BASE', dirname( __FILE__ ) );
-
-define( 'DS', DIRECTORY_SEPARATOR );
-
-require_once ( JPATH_BASE .DS.'includes'.DS.'defines.php' );
-require_once ( JPATH_BASE .DS.'includes'.DS.'framework.php' );
-
-// create the mainframe object
-$mainframe =& JFactory::getApplication('installation');
-
-// initialuse the application
-$mainframe->initialise();
-
-// render the application
-$mainframe->render();
-
-
+// PHP 5 check
+if (version_compare(PHP_VERSION, '5.2.4', '<')) {
+	die('Your host needs to use PHP 5.2.4 or higher to run Joomla 1.6.');
+}
 
 /**
- * RETURN THE RESPONSE
+ * Constant that is checked in included files to prevent direct access.
  */
-echo JResponse::toString();
+define('_JEXEC', 1);
+
+/**
+ * Constant that defines the base path of the installed Joomla site.
+ */
+define('JPATH_BASE', dirname(__FILE__));
+
+/**
+ * Shortcut for the directory separator character.
+ */
+define('DS', DIRECTORY_SEPARATOR);
+
+// Set path constants.
+$parts = explode(DS, JPATH_BASE);
+array_pop($parts);
+
+define('JPATH_ROOT',			implode(DS, $parts));
+define('JPATH_SITE',			JPATH_ROOT);
+define('JPATH_CONFIGURATION',	JPATH_ROOT);
+define('JPATH_ADMINISTRATOR',	JPATH_ROOT.DS.'administrator');
+define('JPATH_LIBRARIES',		JPATH_ROOT.DS.'libraries');
+define('JPATH_PLUGINS',			JPATH_ROOT.DS.'plugins');
+define('JPATH_INSTALLATION',	JPATH_ROOT.DS.'installation');
+define('JPATH_THEMES',			JPATH_BASE);
+define('JPATH_CACHE',			JPATH_ROOT.DS.'cache');
+
+/*
+ * Joomla system checks.
+ */
+error_reporting(E_ALL);
+@ini_set('magic_quotes_runtime', 0);
+@ini_set('zend.ze1_compatibility_mode', '0');
+
+/*
+ * Check for existing configuration file.
+ */
+if (file_exists(JPATH_CONFIGURATION.'/configuration.php') && (filesize(JPATH_CONFIGURATION.'/configuration.php') > 10) && !file_exists(JPATH_INSTALLATION.'/index.php')) {
+	header('Location: ../index.php');
+	exit();
+}
+
+/*
+ * Joomla system startup
+ */
+
+// Bootstrap the Joomla Framework.
+require_once JPATH_LIBRARIES.'/joomla/import.php';
+
+// Joomla library imports.
+jimport('joomla.database.table');
+jimport('joomla.user.user');
+jimport('joomla.environment.uri');
+jimport('joomla.html.parameter');
+jimport('joomla.utilities.utility');
+jimport('joomla.language.language');
+jimport('joomla.utilities.string');
+
+// Create the application object.
+$app = JFactory::getApplication('installation');
+
+// Initialise the application.
+$app->initialise();
+
+// Render the document.
+$app->render();
+
+// Return the response.
+echo $app;

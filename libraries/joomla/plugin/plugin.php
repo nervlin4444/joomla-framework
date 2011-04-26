@@ -1,21 +1,15 @@
 <?php
 /**
-* @version		$Id: plugin.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	Plugin
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: plugin.php 20240 2011-01-10 05:46:24Z dextercowley $
+ * @package		Joomla.Framework
+ * @subpackage	Plugin
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+defined('JPATH_BASE') or die;
 
-jimport( 'joomla.event.event' );
+jimport('joomla.event.event');
 
 /**
  * JPlugin Class
@@ -25,16 +19,16 @@ jimport( 'joomla.event.event' );
  * @subpackage	Plugin
  * @since		1.5
  */
-class JPlugin extends JEvent
+abstract class JPlugin extends JEvent
 {
 	/**
-	 * A JParameter object holding the parameters for the plugin
+	 * A JRegistry object holding the parameters for the plugin
 	 *
-	 * @var		A JParameter object
+	 * @var		A JRegistry object
 	 * @access	public
 	 * @since	1.5
 	 */
-	var	$params	= null;
+	public $params = null;
 
 	/**
 	 * The name of the plugin
@@ -42,7 +36,7 @@ class JPlugin extends JEvent
 	 * @var		sring
 	 * @access	protected
 	 */
-	var $_name	= null;
+	protected $_name = null;
 
 	/**
 	 * The plugin type
@@ -50,45 +44,37 @@ class JPlugin extends JEvent
 	 * @var		string
 	 * @access	protected
 	 */
-	var $_type	= null;
+	protected $_type = null;
 
 	/**
 	 * Constructor
-	 *
-	 * For php4 compatability we must not use the __constructor as a constructor for plugins
-	 * because func_get_args ( void ) returns a copy of all passed arguments NOT references.
-	 * This causes problems with cross-referencing necessary for the observer design pattern.
 	 *
 	 * @param object $subject The object to observe
 	 * @param array  $config  An optional associative array of configuration settings.
-	 * Recognized key values include 'name', 'group', 'params'
+	 * Recognized key values include 'name', 'group', 'params', 'language'
 	 * (this list is not meant to be comprehensive).
 	 * @since 1.5
 	 */
-	function JPlugin(& $subject, $config = array())  {
-		parent::__construct($subject);
-	}
-
-	/**
-	 * Constructor
-	 */
-	function __construct(& $subject, $config = array())
+	public function __construct(&$subject, $config = array())
 	{
-		//Set the parameters
-		if ( isset( $config['params'] ) ) {
-
-			if(is_a($config['params'], 'JParameter')) {
+		// Get the parameters.
+		if (isset($config['params']))
+		{
+			if ($config['params'] instanceof JRegistry) {
 				$this->params = $config['params'];
 			} else {
-				$this->params = new JParameter($config['params']);
+				$this->params = new JRegistry;
+				$this->params->loadJSON($config['params']);
 			}
 		}
 
-		if ( isset( $config['name'] ) ) {
+		// Get the plugin name.
+		if (isset($config['name'])) {
 			$this->_name = $config['name'];
 		}
 
-		if ( isset( $config['type'] ) ) {
+		// Get the plugin type.
+		if (isset($config['type'])) {
 			$this->_type = $config['type'];
 		}
 
@@ -99,20 +85,22 @@ class JPlugin extends JEvent
 	 * Loads the plugin language file
 	 *
 	 * @access	public
-	 * @param	string 	$extension 	The extension for which a language file should be loaded
-	 * @param	string 	$basePath  	The basepath to use
+	 * @param	string	$extension	The extension for which a language file should be loaded
+	 * @param	string	$basePath	The basepath to use
 	 * @return	boolean	True, if the file has successfully loaded.
 	 * @since	1.5
 	 */
-	function loadLanguage($extension = '', $basePath = JPATH_BASE)
+	public function loadLanguage($extension = '', $basePath = JPATH_ADMINISTRATOR)
 	{
-		if(empty($extension)) {
+		if (empty($extension)) {
 			$extension = 'plg_'.$this->_type.'_'.$this->_name;
 		}
 
-		$lang =& JFactory::getLanguage();
-		return $lang->load( strtolower($extension), $basePath);
+		$lang = JFactory::getLanguage();
+		return
+			$lang->load(strtolower($extension), $basePath, null, false, false)
+		||	$lang->load(strtolower($extension), JPATH_PLUGINS .DS.$this->_type.DS.$this->_name, null, false, false)
+		||	$lang->load(strtolower($extension), $basePath, $lang->getDefault(), false, false)
+		||	$lang->load(strtolower($extension), JPATH_PLUGINS .DS.$this->_type.DS.$this->_name, $lang->getDefault(), false, false);
 	}
-
-
 }

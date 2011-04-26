@@ -1,19 +1,14 @@
 <?php
 /**
-* @version		$Id: renderer.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	Document
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: renderer.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Framework
+ * @subpackage	Document
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Abstract class for a renderer
@@ -39,31 +34,28 @@ class JDocumentRenderer extends JObject
 	 * @var		string
 	 * @access	private
 	 */
-	 var $_mime = "text/html";
+	var $_mime = "text/html";
 
 	/**
 	* Class constructor
 	*
-	* @access protected
 	* @param object A reference to the JDocument object that instantiated the renderer
 	*/
-	function __construct(&$doc) {
-		$this->_doc =& $doc;
+	public function __construct(&$doc)
+	{
+		$this->_doc = &$doc;
 	}
 
 	/**
 	 * Renders a script and returns the results as a string
 	 *
-	 * @abstract
-	 * @access public
-	 * @param string 	$name		The name of the element to render
-	 * @param array 	$array		Array of values
-	 * @param string 	$content	Override the output of the renderer
+	 * @param string	$name		The name of the element to render
+	 * @param array		$array		Array of values
+	 * @param string	$content	Override the output of the renderer
 	 * @return string	The output of the script
 	 */
-	function render( $name, $params = array(), $content = null )
+	public function render($name, $params = null, $content = null)
 	{
-
 	}
 
 	/**

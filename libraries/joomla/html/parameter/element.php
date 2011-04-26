@@ -1,19 +1,14 @@
 <?php
 /**
-* @version		$Id: element.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	Parameter
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: element.php 20972 2011-03-16 13:57:36Z chdemko $
+ * @package		Joomla.Framework
+ * @subpackage	Parameter
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Parameter base class
@@ -21,8 +16,9 @@ defined('JPATH_BASE') or die();
  * The JElement is the base class for all JElement types
  *
  * @abstract
- * @package 	Joomla.Framework
- * @subpackage		Parameter
+ * @package		Joomla.Framework
+ * @subpackage	Parameter
+ * @deprecated	JParameter is deprecated and will be removed in a future version. Use JForm instead.
  * @since		1.5
  */
 class JElement extends JObject
@@ -36,7 +32,7 @@ class JElement extends JObject
 	* @access	protected
 	* @var		string
 	*/
-	var	$_name = null;
+	protected $_name = null;
 
 	/**
 	* reference to the object that instantiated the element
@@ -44,14 +40,15 @@ class JElement extends JObject
 	* @access	protected
 	* @var		object
 	*/
-	var	$_parent = null;
+	protected $_parent = null;
 
 	/**
 	 * Constructor
 	 *
 	 * @access protected
 	 */
-	function __construct($parent = null) {
+	public function __construct($parent = null)
+	{
 		$this->_parent = $parent;
 	}
 
@@ -61,11 +58,11 @@ class JElement extends JObject
 	* @access	public
 	* @return	string	type of the parameter
 	*/
-	function getName() {
+	public function getName() {
 		return $this->_name;
 	}
 
-	function render(&$xmlElement, $value, $control_name = 'params')
+	public function render(&$xmlElement, $value, $control_name = 'params')
 	{
 		$name	= $xmlElement->attributes('name');
 		$label	= $xmlElement->attributes('label');
@@ -82,7 +79,7 @@ class JElement extends JObject
 		return $result;
 	}
 
-	function fetchTooltip($label, $description, &$xmlElement, $control_name='', $name='')
+	public function fetchTooltip($label, $description, &$xmlElement, $control_name='', $name='')
 	{
 		$output = '<label id="'.$control_name.$name.'-lbl" for="'.$control_name.$name.'"';
 		if ($description) {
@@ -90,12 +87,13 @@ class JElement extends JObject
 		} else {
 			$output .= '>';
 		}
-		$output .= JText::_( $label ).'</label>';
+		$output .= JText::_($label).'</label>';
 
 		return $output;
 	}
 
-	function fetchElement($name, $value, &$xmlElement, $control_name) {
-		return;
+	public function fetchElement($name, $value, &$xmlElement, $control_name)
+	{
+
 	}
 }

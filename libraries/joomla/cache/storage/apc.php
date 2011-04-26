@@ -1,19 +1,14 @@
 <?php
 /**
- * @version		$Id: apc.php 10707 2008-08-21 09:52:47Z eddieajau $
+ * @version		$Id: apc.php 20228 2011-01-10 00:52:54Z eddieajau $
  * @package		Joomla.Framework
  * @subpackage	Cache
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant
- * to the GNU General Public License, and as distributed it includes or
- * is derivative of works licensed under the GNU General Public License or
- * other free or open source software licenses.
- * See COPYRIGHT.php for copyright notices and details.
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * APC cache storage handler
@@ -25,66 +20,85 @@ defined('JPATH_BASE') or die();
 class JCacheStorageApc extends JCacheStorage
 {
 	/**
-	 * Constructor
-	 *
-	 * @access protected
-	 * @param array $options optional parameters
-	 */
-	function __construct( $options = array() )
-	{
-		parent::__construct($options);
-
-		$config			=& JFactory::getConfig();
-		$this->_hash	= $config->getValue('config.secret');
-	}
-
-	/**
 	 * Get cached data from APC by id and group
 	 *
-	 * @access	public
 	 * @param	string	$id			The cache data id
 	 * @param	string	$group		The cache data group
 	 * @param	boolean	$checkTime	True to verify cache time expiration threshold
 	 * @return	mixed	Boolean false on failure or a cached data string
 	 * @since	1.5
 	 */
-	function get($id, $group, $checkTime)
+	public function get($id, $group, $checkTime = true)
 	{
 		$cache_id = $this->_getCacheId($id, $group);
-		$this->_setExpire($cache_id);
 		return apc_fetch($cache_id);
+	}
+
+	/**
+	 * Get all cached data
+	 *
+	 * @return	array data
+	 * @since	1.6
+	 */
+	public function getAll()
+	{
+		parent::getAll();
+
+		$allinfo 	= apc_cache_info('user');
+		$keys 		= $allinfo['cache_list'];
+		$secret 	= $this->_hash;
+
+		$data = array();
+
+		foreach ($keys as $key) {
+
+			$name 		= $key['info'];
+			$namearr 	= explode('-', $name);
+
+			if ($namearr !== false && $namearr[0] == $secret &&  $namearr[1] == 'cache') {
+				$group = $namearr[2];
+
+				if (!isset($data[$group])) {
+					$item = new JCacheStorageHelper($group);
+				} else {
+					$item = $data[$group];
+				}
+
+				$item->updateSize($key['mem_size']/1024);
+
+				$data[$group] = $item;
+			}
+		}
+
+		return $data;
 	}
 
 	/**
 	 * Store the data to APC by id and group
 	 *
-	 * @access	public
 	 * @param	string	$id		The cache data id
 	 * @param	string	$group	The cache data group
 	 * @param	string	$data	The data to store in cache
 	 * @return	boolean	True on success, false otherwise
 	 * @since	1.5
 	 */
-	function store($id, $group, $data)
+	public function store($id, $group, $data)
 	{
 		$cache_id = $this->_getCacheId($id, $group);
-		apc_store($cache_id.'_expire', time());
 		return apc_store($cache_id, $data, $this->_lifetime);
 	}
 
 	/**
 	 * Remove a cached data entry by id and group
 	 *
-	 * @access	public
 	 * @param	string	$id		The cache data id
 	 * @param	string	$group	The cache data group
 	 * @return	boolean	True on success, false otherwise
 	 * @since	1.5
 	 */
-	function remove($id, $group)
+	public function remove($id, $group)
 	{
 		$cache_id = $this->_getCacheId($id, $group);
-		apc_delete($cache_id.'_expire');
 		return apc_delete($cache_id);
 	}
 
@@ -94,63 +108,116 @@ class JCacheStorageApc extends JCacheStorage
 	 * group mode		: cleans all cache in the group
 	 * notgroup mode	: cleans all cache not in the group
 	 *
-	 * @access	public
 	 * @param	string	$group	The cache data group
 	 * @param	string	$mode	The mode for cleaning cache [group|notgroup]
 	 * @return	boolean	True on success, false otherwise
 	 * @since	1.5
 	 */
-	function clean($group, $mode)
+	public function clean($group, $mode = null)
 	{
+		$allinfo 	= apc_cache_info('user');
+		$keys 		= $allinfo['cache_list'];
+		$secret 	= $this->_hash;
+
+		foreach ($keys as $key) {
+
+			if (strpos($key['info'], $secret.'-cache-'.$group.'-') === 0 xor $mode != 'group') {
+				apc_delete($key['info']);
+			}
+		}
 		return true;
+	}
+
+	/**
+	 * Force garbage collect expired cache data as items are removed only on fetch!
+	 *
+	 * @return boolean  True on success, false otherwise.
+	 * @since	1.6
+	 */
+	public function gc()
+	{
+		$lifetime 	= $this->_lifetime;
+		$allinfo 	= apc_cache_info('user');
+		$keys 		= $allinfo['cache_list'];
+		$secret 	= $this->_hash;
+
+		foreach ($keys as $key) {
+			if (strpos($key['info'], $secret.'-cache-')) {
+				apc_fetch($key['info']);
+			}
+		}
 	}
 
 	/**
 	 * Test to see if the cache storage is available.
 	 *
-	 * @static
-	 * @access public
 	 * @return boolean  True on success, false otherwise.
 	 */
-	function test()
+	public static function test()
 	{
 		return extension_loaded('apc');
 	}
 
 	/**
-	 * Set expire time on each call since memcache sets it on cache creation.
+	 * Lock cached item - override parent as this is more efficient
 	 *
-	 * @access private
-	 *
-	 * @param string  $key   Cache key to expire.
-	 * @param integer $lifetime  Lifetime of the data in seconds.
+	 * @param	string	$id		The cache data id
+	 * @param	string	$group	The cache data group
+	 * @param	integer	$locktime Cached item max lock time
+	 * @return	boolean	True on success, false otherwise.
+	 * @since	1.6
 	 */
-	function _setExpire($key)
+	public function lock($id,$group,$locktime)
 	{
-		$lifetime	= $this->_lifetime;
-		$expire		= apc_fetch($key.'_expire');
+		$returning = new stdClass();
+		$returning->locklooped = false;
 
-		// set prune period
-		if ($expire + $lifetime < time()) {
-			apc_delete($key);
-			apc_delete($key.'_expire');
-		} else {
-			apc_store($key.'_expire',  time());
+		$looptime = $locktime * 10;
+
+		$cache_id = $this->_getCacheId($id, $group).'_lock';
+
+		$data_lock = apc_add( $cache_id, 1, $locktime );
+
+		if ( $data_lock === FALSE ) {
+
+			$lock_counter = 0;
+
+			// loop until you find that the lock has been released.  that implies that data get from other thread has finished
+			while ( $data_lock === FALSE ) {
+
+				if ( $lock_counter > $looptime ) {
+					$returning->locked 		= false;
+					$returning->locklooped 	= true;
+					break;
+				}
+
+				usleep(100);
+				$data_lock = apc_add( $cache_id, 1, $locktime );
+				$lock_counter++;
+			}
+
 		}
+		$returning->locked = $data_lock;
+
+		return $returning;
 	}
 
 	/**
-	 * Get a cache_id string from an id/group pair
+	 * Unlock cached item - override parent for cacheid compatibility with lock
 	 *
-	 * @access	private
 	 * @param	string	$id		The cache data id
 	 * @param	string	$group	The cache data group
-	 * @return	string	The cache_id string
-	 * @since	1.5
+	 * @param	integer	$locktime Cached item max lock time
+	 * @return	boolean	True on success, false otherwise.
+	 * @since	1.6
 	 */
-	function _getCacheId($id, $group)
+	public function unlock($id,$group=null)
 	{
-		$name	= md5($this->_application.'-'.$id.'-'.$this->_hash.'-'.$this->_language);
-		return 'cache_'.$group.'-'.$name;
+		$unlock = false;
+
+		$cache_id = $this->_getCacheId($id, $group).'_lock';
+
+		$unlock = apc_delete($cache_id);
+		return $unlock;
 	}
 }

@@ -1,22 +1,33 @@
 <?php
 /**
-* @version		$Id: helper.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: helper.php 21020 2011-03-27 06:52:01Z infograf768 $
+ * @package		Joomla.Site
+ * @subpackage	mod_search
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
 // no direct access
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') or die;
 
-class modSearchHelper {
-    function getSearchImage($button_text) {
-	    $img = JHTML::_('image.site', 'searchButton.gif', '/images/M_images/', NULL, NULL, $button_text, null, 0);
+/**
+ * @package		Joomla.Site
+ * @subpackage	mod_search
+ * @since		1.5
+ */
+class modSearchHelper
+{
+	/**
+	 * Display the search button as an image.
+	 *
+	 * @param	string	$button_text	The alt text for the button.
+	 *
+	 * @return	string	The HTML for the image.
+	 * @since	1.5
+	 */
+	public static function getSearchImage($button_text)
+	{
+		$img = JHtml::_('image','searchButton.gif', $button_text, NULL, true, true);
 		return $img;
 	}
 }

@@ -1,19 +1,18 @@
 <?php
 /**
- * @version		$Id: path.php 13341 2009-10-27 03:03:54Z ian $
+ * @version		$Id: path.php 20196 2011-01-09 02:40:25Z ian $
  * @package		Joomla.Framework
  * @subpackage	FileSystem
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant
- * to the GNU General Public License, and as distributed it includes or
- * is derivative of works licensed under the GNU General Public License or
- * other free or open source software licenses.
- * See COPYRIGHT.php for copyright notices and details.
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
-defined('JPATH_BASE') or die();
+
+// no direct access
+defined('JPATH_BASE') or die;
+
 /** boolean True if a Windows based host */
 define('JPATH_ISWIN', (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'));
+
 /** boolean True if a Mac based host */
 define('JPATH_ISMAC', (strtoupper(substr(PHP_OS, 0, 3)) === 'MAC'));
 
@@ -30,8 +29,7 @@ if (!defined('JPATH_ROOT')) {
 /**
  * A Path handling class
  *
- * @static
- * @package 	Joomla.Framework
+ * @package		Joomla.Framework
  * @subpackage	FileSystem
  * @since		1.5
  */
@@ -40,17 +38,15 @@ class JPath
 	/**
 	 * Checks if a path's permissions can be changed
 	 *
-	 * @param	string	$path	Path to check
+	 * @param	string	Path to check
 	 * @return	boolean	True if path can have mode changed
 	 * @since	1.5
 	 */
-	function canChmod($path)
+	public static function canChmod($path)
 	{
 		$perms = fileperms($path);
-		if ($perms !== false)
-		{
-			if (@ chmod($path, $perms ^ 0001))
-			{
+		if ($perms !== false) {
+			if (@chmod($path, $perms ^ 0001)) {
 				@chmod($path, $perms);
 				return true;
 			}
@@ -61,22 +57,21 @@ class JPath
 	/**
 	 * Chmods files and directories recursivly to given permissions
 	 *
-	 * @param	string	$path		Root path to begin changing mode [without trailing slash]
-	 * @param	string	$filemode	Octal representation of the value to change file mode to [null = no change]
-	 * @param	string	$foldermode	Octal representation of the value to change folder mode to [null = no change]
+	 * @param	string	Root path to begin changing mode [without trailing slash]
+	 * @param	string	Octal representation of the value to change file mode to [null = no change]
+	 * @param	string	Octal representation of the value to change folder mode to [null = no change]
 	 * @return	boolean	True if successful [one fail means the whole operation failed]
 	 * @since	1.5
 	 */
-	function setPermissions($path, $filemode = '0644', $foldermode = '0755') {
-
-		// Initialize return value
+	public static function setPermissions($path, $filemode = '0644', $foldermode = '0755')
+	{
+		// Initialise return value
 		$ret = true;
 
-		if (is_dir($path))
-		{
+		if (is_dir($path)) {
 			$dh = opendir($path);
-			while ($file = readdir($dh))
-			{
+
+			while ($file = readdir($dh)) {
 				if ($file != '.' && $file != '..') {
 					$fullpath = $path.'/'.$file;
 					if (is_dir($fullpath)) {
@@ -98,9 +93,7 @@ class JPath
 					$ret = false;
 				}
 			}
-		}
-		else
-		{
+		} else {
 			if (isset ($filemode)) {
 				$ret = @ chmod($path, octdec($filemode));
 			}
@@ -111,11 +104,11 @@ class JPath
 	/**
 	 * Get the permissions of the file/folder at a give path
 	 *
-	 * @param	string	$path	The path of a file/folder
+	 * @param	string	The path of a file/folder
 	 * @return	string	Filesystem permissions
 	 * @since	1.5
 	 */
-	function getPermissions($path)
+	public static function getPermissions($path)
 	{
 		$path = JPath::clean($path);
 		$mode = @ decoct(@ fileperms($path) & 0777);
@@ -123,9 +116,9 @@ class JPath
 		if (strlen($mode) < 3) {
 			return '---------';
 		}
+
 		$parsed_mode = '';
-		for ($i = 0; $i < 3; $i ++)
-		{
+		for ($i = 0; $i < 3; $i ++) {
 			// read
 			$parsed_mode .= ($mode { $i } & 04) ? "r" : "-";
 			// write
@@ -139,33 +132,36 @@ class JPath
 	/**
 	 * Checks for snooping outside of the file system root
 	 *
-	 * @param	string	$path	A file system path to check
+	 * @param	string	A file system path to check
+	 * @param	string	Directory separator (optional)
 	 * @return	string	A cleaned version of the path
 	 * @since	1.5
 	 */
-	function check($path)
+	public static function check($path, $ds = DIRECTORY_SEPARATOR)
 	{
 		if (strpos($path, '..') !== false) {
-			JError::raiseError( 20, 'JPath::check Use of relative paths not permitted'); // don't translate
+			JError::raiseError(20, 'JPath::check Use of relative paths not permitted'); // don't translate
 			jexit();
 		}
+
 		$path = JPath::clean($path);
 		if (strpos($path, JPath::clean(JPATH_ROOT)) !== 0) {
-			JError::raiseError( 20, 'JPath::check Snooping out of bounds @ '.$path); // don't translate
+			JError::raiseError(20, 'JPath::check Snooping out of bounds @ '.$path); // don't translate
 			jexit();
 		}
+
+		return $path;
 	}
 
 	/**
 	 * Function to strip additional / or \ in a path name
 	 *
-	 * @static
-	 * @param	string	$path	The path to clean
-	 * @param	string	$ds		Directory separator (optional)
+	 * @param	string	The path to clean
+	 * @param	string	Directory separator (optional)
 	 * @return	string	The cleaned path
 	 * @since	1.5
 	 */
-	function clean($path, $ds=DS)
+	public static function clean($path, $ds = DIRECTORY_SEPARATOR)
 	{
 		$path = trim($path);
 
@@ -182,12 +178,11 @@ class JPath
 	/**
 	 * Method to determine if script owns the path
 	 *
-	 * @static
-	 * @param	string	$path	Path to check ownership
+	 * @param	string	Path to check ownership
 	 * @return	boolean	True if the php script owns the path passed
 	 * @since	1.5
 	 */
-	function isOwner($path)
+	public static function isOwner($path)
 	{
 		jimport('joomla.filesystem.file');
 		jimport('joomla.user.helper');
@@ -201,12 +196,12 @@ class JPath
 		$dir = (!$dir && is_writable($ssp)) ? $ssp : false;
 		$dir = (!$dir && is_writable($jtp)) ? $jtp : false;
 
-		if ($dir)
-		{
+		if ($dir) {
 			$test = $dir.DS.$tmp;
 
 			// Create the test file
-			JFile::write($test, '');
+			$blank = '';
+			JFile::write($test, $blank, false);
 
 			// Test ownership
 			$return = (fileowner($test) == fileowner($path));
@@ -223,25 +218,22 @@ class JPath
 	/**
 	 * Searches the directory paths for a given file.
 	 *
-	 * @access	protected
-	  * @param	array|string	$path	An path or array of path to search in
-	 * @param	string	$file	The file name to look for.
-	 * @return	mixed	The full path and file name for the target file, or boolean false if the file is not found in any of the paths.
+	 * @param	array|string	An path or array of path to search in
+	 * @param	string			The file name to look for.
+	 * @return	mixed			The full path and file name for the target file, or boolean false if the file is not found in any of the paths.
 	 * @since	1.5
 	 */
-	function find($paths, $file)
+	public static function find($paths, $file)
 	{
 		settype($paths, 'array'); //force to array
 
 		// start looping through the path set
-		foreach ($paths as $path)
-		{
+		foreach ($paths as $path) {
 			// get the path to the file
-			$fullname = $path.DS.$file;
+			$fullname = $path.'/'.$file;
 
 			// is the path based on a stream?
-			if (strpos($path, '://') === false)
-			{
+			if (strpos($path, '://') === false) {
 				// not a stream, so do a realpath() to avoid directory
 				// traversal attempts on the local file system.
 				$path = realpath($path); // needed for substr() later

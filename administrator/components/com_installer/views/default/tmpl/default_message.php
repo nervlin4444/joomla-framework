@@ -1,17 +1,28 @@
-<?php // no direct access
-	defined( '_JEXEC' ) or die( 'Restricted access' ); 
-	$state			= &$this->get('State');
-	$message1		= $state->get('message');
-	$message2		= $state->get('extension.message');
+<?php
+/**
+ * @version		$Id: default_message.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Administrator
+ * @subpackage	com_installer
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ * @since		1.5
+ */
+
+// no direct access
+defined('_JEXEC') or die;
+
+$state			= $this->get('State');
+$message1		= $state->get('message');
+$message2		= $state->get('extension_message');
 ?>
 <table class="adminform">
 	<tbody>
-		<?php if($message1) : ?>
+		<?php if ($message1) : ?>
 		<tr>
-			<th><?php echo JText::_($message1) ?></th>
+			<th><?php echo $message1 ?></th>
 		</tr>
 		<?php endif; ?>
-		<?php if($message2) : ?>
+		<?php if ($message2) : ?>
 		<tr>
 			<td><?php echo $message2; ?></td>
 		</tr>

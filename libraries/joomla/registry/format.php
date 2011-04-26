@@ -1,89 +1,80 @@
 <?php
 /**
- * @version		$Id: format.php 10707 2008-08-21 09:52:47Z eddieajau $
+ * @version		$Id: format.php 20196 2011-01-09 02:40:25Z ian $
  * @package		Joomla.Framework
  * @subpackage	Registry
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant
- * to the GNU General Public License, and as distributed it includes or
- * is derivative of works licensed under the GNU General Public License or
- * other free or open source software licenses.
- * See COPYRIGHT.php for copyright notices and details.
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Abstract Format for JRegistry
  *
  * @abstract
- * @package 	Joomla.Framework
+ * @package		Joomla.Framework
  * @subpackage	Registry
  * @since		1.5
  */
-class JRegistryFormat extends JObject
+abstract class JRegistryFormat
 {
 	/**
 	 * Returns a reference to a Format object, only creating it
 	 * if it doesn't already exist.
 	 *
-	 * @static
-	 * @param	string	$format	The format to load
+	 * @param	string	The format to load
 	 * @return	object	Registry format handler
+	 * @throws	JException
 	 * @since	1.5
 	 */
-	function &getInstance($format)
+	public static function getInstance($type)
 	{
+		// Initialize static variable.
 		static $instances;
-
 		if (!isset ($instances)) {
 			$instances = array ();
 		}
 
-		$format = strtolower(JFilterInput::clean($format, 'word'));
-		if (empty ($instances[$format]))
-		{
-			$class = 'JRegistryFormat'.$format;
-			if(!class_exists($class))
-			{
-				$path    = dirname(__FILE__).DS.'format'.DS.$format.'.php';
-				if (file_exists($path)) {
-					require_once($path);
+		// Sanitize format type.
+		$type = strtolower(preg_replace('/[^A-Z0-9_]/i', '', $type));
+
+		// Only instantiate the object if it doesn't already exist.
+		if (!isset($instances[$type])) {
+			// Only load the file the class does not exist.
+			$class = 'JRegistryFormat'.$type;
+			if (!class_exists($class)) {
+				$path = dirname(__FILE__).'/format/'.$type.'.php';
+				if (is_file($path)) {
+					require_once $path;
 				} else {
-					JError::raiseError(500,JText::_('Unable to load format class'));
+					throw new JException(JText::_('JLIB_REGISTRY_EXCEPTION_LOAD_FORMAT_CLASS'), 500, E_ERROR);
 				}
 			}
 
-			$instances[$format] = new $class ();
+			$instances[$type] = new $class();
 		}
-		return $instances[$format];
+		return $instances[$type];
 	}
 
 	/**
-	 * Converts an XML formatted string into an object
+	 * Converts an object into a formatted string.
 	 *
-	 * @abstract
-	 * @access	public
-	 * @param	string	$data	Formatted string
+	 * @param	object	Data Source Object.
+	 * @param	array	An array of options for the formatter.
+	 * @return	string	Formatted string.
+	 * @since	1.5
+	 */
+	abstract public function objectToString($object, $options = null);
+
+	/**
+	 * Converts a formatted string into an object.
+	 *
+	 * @param	string	Formatted string
+	 * @param	array	An array of options for the formatter.
 	 * @return	object	Data Object
 	 * @since	1.5
 	 */
-	function stringToObject( $data, $namespace='' ) {
-		return true;
-	}
-
-	/**
-	 * Converts an object into a formatted string
-	 *
-	 * @abstract
-	 * @access	public
-	 * @param	object	$object	Data Source Object
-	 * @return	string	Formatted string
-	 * @since	1.5
-	 */
-	function objectToString( &$object ) {
-
-	}
+	abstract public function stringToObject($data, $options = null);
 }

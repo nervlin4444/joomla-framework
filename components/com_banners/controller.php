@@ -1,39 +1,35 @@
 <?php
 /**
- * @version		$Id: controller.php 10381 2008-06-01 03:35:53Z pasamio $
- * @package  	Joomla
- * @subpackage	Banners
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant to the
- * GNU General Public License, and as distributed it includes or is derivative
- * of works licensed under the GNU General Public License or other free or open
- * source software licenses. See COPYRIGHT.php for copyright notices and
- * details.
+ * @version		$Id: controller.php 21097 2011-04-07 15:38:03Z dextercowley $
+ * @package		Joomla.Site
+ * @subpackage	com_banners
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// Check to ensure this file is included in Joomla!
-defined('_JEXEC') or die( 'Restricted access' );
+// No direct access
+defined('_JEXEC') or die;
 
-jimport( 'joomla.application.component.controller' );
+jimport('joomla.application.component.controller');
 
 /**
  * Banners Controller
  *
- * @package  	Joomla
- * @subpackage	Banners
+ * @package		Joomla.Site
+ * @subpackage	com_banners
  * @since		1.5
  */
 class BannersController extends JController
 {
 	function click()
 	{
-		$bid = JRequest::getInt( 'bid', 0 );
-		if ($bid)
-		{
-			$model = &$this->getModel( 'Banner' );
-			$model->click( $bid );
-			$this->setRedirect( $model->getUrl( $bid ) );
+		$id = JRequest::getInt('id', 0);
+
+		if ($id) {
+			$model = $this->getModel('Banner','BannersModel',array('ignore_request'=>true));
+			$model->setState('banner.id',$id);
+			$model->click();
+			$this->setRedirect($model->getUrl());
 		}
 	}
 }

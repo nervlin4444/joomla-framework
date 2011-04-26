@@ -1,86 +1,18 @@
 <?php
 /**
-* @version		$Id: wrapper.php 10704 2008-08-21 09:38:40Z eddieajau $
-* @package		Joomla
-* @subpackage	Wrapper
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: wrapper.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Site
+ * @subpackage	com_wrapper
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
 // no direct access
-defined( '_JEXEC' ) or die( 'Restricted access' );
+defined('_JEXEC') or die;
 
-/*
- * This is our main control structure for the component
- *
- * Each view is determined by the $task variable
- */
-switch (JRequest::getCmd('task'))
-{
-	default:
-		WrapperController::display();
-		break;
-}
+// Include dependancies
+jimport('joomla.application.component.controller');
 
-/**
- * Static class to hold controller functions for the Wrapper component
- *
- * @static
- * @package		Joomla
- * @subpackage	Wrapper
- * @since		1.5
- */
-class WrapperController
-{
-	function display()
-	{
-		global $mainframe, $option;
-
-		$document =& JFactory::getDocument();
-
-		$menus	= &JSite::getMenu();
-		$menu	= $menus->getActive();
-
-		// Get the page/component configuration
-		$params = &$mainframe->getParams();
-
-		//set page title
-		$document->setTitle($menu->name);
-
-		$url = $params->def( 'url', '' );
-
-		$row = new stdClass();
-		if ( $params->def( 'add_scheme', 1 ) )
-		{
-			// adds 'http://' if none is set
-			if ( substr( $url, 0, 1 ) == '/' )
-			{
-				// relative url in component. use server http_host.
-				$row->url = 'http://'. $_SERVER['HTTP_HOST'] . $url;
-			}
-			elseif ( !strstr( $url, 'http' ) && !strstr( $url, 'https' ) ) {
-				$row->url = 'http://'. $url;
-			}
-			else {
-				$row->url = $url;
-			}
-		}
-		else {
-			$row->url = $url;
-		}
-
-		require_once (JPATH_COMPONENT.DS.'views'.DS.'wrapper'.DS.'view.php');
-		$view = new WrapperViewWrapper();
-
-		$view->assignRef('params'  , $params);
-		$view->assignRef('wrapper' , $row);
-
-		$view->display();
-	}
-}
-?>
+$controller = JController::getInstance('Wrapper');
+$controller->execute(JRequest::getCmd('task'));
+$controller->redirect();

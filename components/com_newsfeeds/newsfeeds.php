@@ -1,32 +1,20 @@
 <?php
 /**
-* version $Id: newsfeeds.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla
-* @subpackage	Newsfeeds
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+* version $Id: newsfeeds.php 21097 2011-04-07 15:38:03Z dextercowley $
+ * @package		Joomla.Site
+ * @subpackage	com_newsfeeds
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
 // no direct access
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') or die;
 
 // Require the com_content helper library
-require_once (JPATH_COMPONENT.DS.'controller.php');
-
+jimport('joomla.application.component.controller');
+require_once JPATH_COMPONENT.'/helpers/route.php';
 JTable::addIncludePath(JPATH_COMPONENT_ADMINISTRATOR.DS.'tables');
 
-// Create the controller
-$controller = new NewsfeedsController( );
-
-// Perform the Request task
-$controller->execute('');
-
-// Redirect if set by the controller
+$controller	= JController::getInstance('Newsfeeds');
+$controller->execute(JRequest::getCmd('task'));
 $controller->redirect();
-
-?>

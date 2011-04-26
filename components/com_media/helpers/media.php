@@ -1,20 +1,15 @@
 <?php
 /**
- * @version		$Id: media.php 10381 2008-06-01 03:35:53Z pasamio $
- * @package		Joomla
- * @subpackage	Media
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant to the
- * GNU General Public License, and as distributed it includes or is derivative
- * of works licensed under the GNU General Public License or other free or open
- * source software licenses. See COPYRIGHT.php for copyright notices and
- * details.
+ * @version		$Id: media.php 21097 2011-04-07 15:38:03Z dextercowley $
+ * @package		Joomla.Site
+ * @subpackage	com_media
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 /**
- * @package		Joomla
- * @subpackage	Media
+ * @package		Joomla.Site
+ * @subpackage	com_media
  */
 class MediaHelper
 {
@@ -23,9 +18,10 @@ class MediaHelper
 	 * @param string The filename
 	 * @return boolean
 	 */
-	function isImage( $fileName )
+	function isImage($fileName)
 	{
 		static $imageTypes = 'xcf|odg|gif|jpg|png|bmp';
+
 		return preg_match("/$imageTypes/i",$fileName);
 	}
 
@@ -34,7 +30,7 @@ class MediaHelper
 	 * @param string The filename
 	 * @return boolean
 	 */
-	function getTypeIcon( $fileName )
+	function getTypeIcon($fileName)
 	{
 		// Get file extension
 		return strtolower(substr($fileName, strrpos($fileName, '.') + 1));
@@ -46,41 +42,41 @@ class MediaHelper
 	 * @param string An error message to be returned
 	 * @return boolean
 	 */
-	function canUpload( $file, &$err )
+	function canUpload($file, &$err)
 	{
-		$params = &JComponentHelper::getParams( 'com_media' );
+		$params = JComponentHelper::getParams('com_media');
 
 		jimport('joomla.filesystem.file');
 		$format = JFile::getExt($file['name']);
 
-		$allowable = explode( ',', $params->get( 'upload_extensions' ));
+		$allowable = explode(',', $params->get('upload_extensions'));
 
-		if (!in_array($format, $allowable))
-		{
-			$err = 'This file type is not supported';
+		if (!in_array($format, $allowable)) {
+			$err = JText('COM_MEDIA_ERROR_WARNFILETYPE');
 			return false;
 		}
-		$maxSize = (int) $params->get( 'upload_maxsize', 0 );
-		if ($maxSize > 0 && (int) $file['size'] > $maxSize)
-		{
-			$err = 'This file is too large to upload';
+
+		$maxSize = (int) ($params->get('upload_maxsize', 0) * 1024 * 1024);
+
+		if ($maxSize > 0 && (int) $file['size'] > $maxSize) {
+			$err = JText('COM_MEDIA_ERROR_WARNFILETOOLARGE');
+
 			return false;
 		}
+
 		return true;
 	}
 
-	function parseSize($size)
+	public static function parseSize($size)
 	{
 		if ($size < 1024) {
-			return $size . ' bytes';
+			return JText::sprintf('COM_MEDIA_FILESIZE_BYTES', $size);
 		}
-		else
-		{
-			if ($size >= 1024 && $size < 1024 * 1024) {
-				return sprintf('%01.2f', $size / 1024.0) . ' Kb';
-			} else {
-				return sprintf('%01.2f', $size / (1024.0 * 1024)) . ' Mb';
-			}
+		else if ($size < 1024 * 1024) {
+			return JText::sprintf('COM_MEDIA_FILESIZE_KILOBYTES', sprintf('%01.2f', $size / 1024.0));
+		}
+		else {
+			return JText::sprintf('COM_MEDIA_FILESIZE_MEGABYTES', sprintf('%01.2f', $size / (1024.0 * 1024)));
 		}
 	}
 
@@ -91,7 +87,8 @@ class MediaHelper
 		//dynamically with any size image
 		if ($width > $height) {
 			$percentage = ($target / $width);
-		} else {
+		}
+		else {
 			$percentage = ($target / $height);
 		}
 
@@ -104,7 +101,7 @@ class MediaHelper
 		return "width=\"$width\" height=\"$height\"";
 	}
 
-	function countFiles( $dir )
+	function countFiles($dir)
 	{
 		$total_file = 0;
 		$total_dir = 0;
@@ -112,10 +109,12 @@ class MediaHelper
 		if (is_dir($dir)) {
 			$d = dir($dir);
 
-			while (false !== ($entry = $d->read())) {
+			while (false !== ($entry = $d->read()))
+			{
 				if (substr($entry, 0, 1) != '.' && is_file($dir . DIRECTORY_SEPARATOR . $entry) && strpos($entry, '.html') === false && strpos($entry, '.php') === false) {
 					$total_file++;
 				}
+
 				if (substr($entry, 0, 1) != '.' && is_dir($dir . DIRECTORY_SEPARATOR . $entry)) {
 					$total_dir++;
 				}
@@ -124,8 +123,6 @@ class MediaHelper
 			$d->close();
 		}
 
-		return array ( $total_file, $total_dir );
+		return array ($total_file, $total_dir);
 	}
-
 }
-?>

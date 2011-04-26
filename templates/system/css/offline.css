@@ -1,12 +1,7 @@
 /**
- * CSS Document for offline page
- * @version $Id: offline.css 10387 2008-06-03 10:59:16Z pasamio $
- * @package Joomla
- * @copyright Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license GNU/GPL, see LICENSE.php
- * Joomla! is free software and parts of it may contain or be derived from the
- * GNU General Public License or other free or open source software licenses.
- * See COPYRIGHT.php for copyright notices and details.
+ * @version		$Id: offline.css 20196 2011-01-09 02:40:25Z ian $
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 body {
@@ -16,7 +11,11 @@ body {
 	text-align: center;
 }
 
-img  { border: 0 none; }
+img  { 
+	border: 0 none;
+	margin-left: auto;
+	margin-right: auto;
+}
 
 /* -- id styles ------------------------------------- */
 

@@ -1,22 +1,23 @@
 <?php
 /**
-* @version		$Id: search.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla
-* @subpackage	Search
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: search.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Administrator
+ * @subpackage	com_search
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
 // no direct access
-defined( '_JEXEC' ) or die( 'Restricted access' );
+defined('_JEXEC') or die;
 
-require_once( JPATH_COMPONENT.DS.'controller.php' );
+// Access check.
+if (!JFactory::getUser()->authorise('core.manage', 'com_search')) {
+	return JError::raiseWarning(404, JText::_('JERROR_ALERTNOAUTHOR'));
+}
 
-$controller = new SearchController();
-$controller->execute( JRequest::getCmd( 'task' ) );
+// Include dependancies
+jimport('joomla.application.component.controller');
+
+$controller	= JController::getInstance('Search');
+$controller->execute(JRequest::getCmd('task'));
 $controller->redirect();

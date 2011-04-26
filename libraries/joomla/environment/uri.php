@@ -1,19 +1,16 @@
 <?php
 /**
- * @version		$Id: uri.php 12389 2009-07-01 00:34:45Z ian $
+ * @version		$Id: uri.php 21057 2011-04-03 00:59:20Z dextercowley $
  * @package		Joomla.Framework
  * @subpackage	Environment
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant
- * to the GNU General Public License, and as distributed it includes or
- * is derivative of works licensed under the GNU General Public License or
- * other free or open source software licenses.
- * See COPYRIGHT.php for copyright notices and details.
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
+
+jimport('joomla.utilities.string');
 
 /**
  * JURI Class
@@ -29,113 +26,101 @@ defined('JPATH_BASE') or die();
 class JURI extends JObject
 {
 	/**
-	 * Original URI
-	 *
-	 * @var		string
+	 * @var string Original URI
 	 */
-	var $_uri = null;
+	protected $_uri = null;
 
 	/**
-	 * Protocol
-	 *
-	 * @var		string
+	 * @var string Protocol
 	 */
-	var $_scheme = null;
+	protected $_scheme = null;
 
 	/**
-	 * Host
-	 *
-	 * @var		string
+	 * @var string Host
 	 */
-	var $_host = null;
+	protected $_host = null;
 
 	/**
-	 * Port
-	 *
-	 * @var		integer
+	 * @var integer Port
 	 */
-	var $_port = null;
+	protected $_port = null;
 
 	/**
-	 * Username
-	 *
-	 * @var		string
+	 * @var string Username
 	 */
-	var $_user = null;
+	protected $_user = null;
 
 	/**
-	 * Password
-	 *
-	 * @var		string
+	 * @var string Password
 	 */
-	var $_pass = null;
+	protected $_pass = null;
 
 	/**
-	 * Path
-	 *
-	 * @var		string
+	 * @var string Path
 	 */
-	var $_path = null;
+	protected $_path = null;
 
 	/**
-	 * Query
-	 *
-	 * @var		string
+	 * @var string Query
 	 */
-	var $_query = null;
+	protected $_query = null;
 
 	/**
-	 * Anchor
-	 *
-	 * @var		string
+	 * @var string Anchor
 	 */
-	var $_fragment = null;
+	protected $_fragment = null;
 
 	/**
-	 * Query variable hash
-	 *
-	 * @var		array
+	 * @var array Query variable hash.
 	 */
-	var $_vars = array ();
+	protected $_vars = array ();
 
 	/**
 	 * Constructor.
-	 * You can pass a URI string to the constructor to initialize a specific URI.
+	 * You can pass a URI string to the constructor to initialise a specific URI.
 	 *
 	 * @param	string $uri The optional URI string
 	 */
-	function __construct($uri = null)
+	public function __construct($uri = null)
 	{
-		if ($uri !== null) {
+		if (!is_null($uri)) {
 			$this->parse($uri);
 		}
 	}
 
 	/**
-	 * Returns a reference to a global JURI object, only creating it
+	 * Magic method to get the string representation of the URI object.
+	 *
+	 * @return	string
+	 * @since	1.6
+	 */
+	public function __toString()
+	{
+		return $this->toString();
+	}
+
+	/**
+	 * Returns the global JURI object, only creating it
 	 * if it doesn't already exist.
 	 *
-	 * This method must be invoked as:
-	 * 		<pre>  $uri =& JURI::getInstance([$uri]);</pre>
-	 *
-	 * @static
 	 * @param	string $uri The URI to parse.  [optional: if null uses script URI]
 	 * @return	JURI  The URI object.
 	 * @since	1.5
 	 */
-	function &getInstance($uri = 'SERVER')
+	public static function getInstance($uri = 'SERVER')
 	{
 		static $instances = array();
 
-		if (!isset ($instances[$uri]))
+		if (!isset($instances[$uri]))
 		{
 			// Are we obtaining the URI from the server?
 			if ($uri == 'SERVER')
 			{
-				// Determine if the request was over SSL (HTTPS)
+				// Determine if the request was over SSL (HTTPS).
 				if (isset($_SERVER['HTTPS']) && !empty($_SERVER['HTTPS']) && (strtolower($_SERVER['HTTPS']) != 'off')) {
 					$https = 's://';
-				} else {
+				}
+				else {
 					$https = '://';
 				}
 
@@ -144,22 +129,22 @@ class JURI extends JObject
 				 * to determine if we are running on apache or IIS.  If PHP_SELF and REQUEST_URI
 				 * are present, we will assume we are running on apache.
 				 */
-				if (!empty ($_SERVER['PHP_SELF']) && !empty ($_SERVER['REQUEST_URI'])) {
-
-					/*
-					 * To build the entire URI we need to prepend the protocol, and the http host
-					 * to the URI string.
-					 */
+				if (!empty($_SERVER['PHP_SELF']) && !empty ($_SERVER['REQUEST_URI']))
+				{
+					// To build the entire URI we need to prepend the protocol, and the http host
+					// to the URI string.
 					$theURI = 'http' . $https . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
-				/*
-				 * Since we do not have REQUEST_URI to work with, we will assume we are
-				 * running on IIS and will therefore need to work some magic with the SCRIPT_NAME and
-				 * QUERY_STRING environment variables.
-				 */
+					// Since we do not have REQUEST_URI to work with, we will assume we are
+					// running on IIS and will therefore need to work some magic with the SCRIPT_NAME and
+					// QUERY_STRING environment variables.
+					
+					if (strlen($_SERVER['QUERY_STRING']) && strpos($_SERVER['REQUEST_URI'], $_SERVER['QUERY_STRING']) === false) {
+						$theURI .= '?'.$_SERVER['QUERY_STRING'];
+					}
 				}
-				 else
-				 {
+				else
+				{
 					// IIS uses the SCRIPT_NAME variable instead of a REQUEST_URI variable... thanks, MS
 					$theURI = 'http' . $https . $_SERVER['HTTP_HOST'] . $_SERVER['SCRIPT_NAME'];
 
@@ -168,14 +153,6 @@ class JURI extends JObject
 						$theURI .= '?' . $_SERVER['QUERY_STRING'];
 					}
 				}
-
-				// Now we need to clean what we got since we can't trust the server var
-				$theURI = urldecode($theURI);
-				$theURI = str_replace('"', '&quot;',$theURI);
-				$theURI = str_replace('<', '&lt;',$theURI);
-				$theURI = str_replace('>', '&gt;',$theURI);
-				$theURI = preg_replace('/eval\((.*)\)/', '', $theURI);
-				$theURI = preg_replace('/[\\\"\\\'][\\s]*javascript:(.*)[\\\"\\\']/', '""', $theURI);
 			}
 			else
 			{
@@ -192,39 +169,50 @@ class JURI extends JObject
 	/**
 	 * Returns the base URI for the request.
 	 *
-	 * @access	public
 	 * @static
 	 * @param	boolean $pathonly If false, prepend the scheme, host and port information. Default is false.
 	 * @return	string	The base URI string
 	 * @since	1.5
 	 */
-	function base($pathonly = false)
+	public static function base($pathonly = false)
 	{
 		static $base;
 
-		// Get the base request path
+		// Get the base request path.
 		if (!isset($base))
 		{
-			$config =& JFactory::getConfig();
-			$live_site = $config->getValue('config.live_site');
-			if(trim($live_site) != '') {
-				$uri =& JURI::getInstance($live_site);
-				$base['prefix'] = $uri->toString( array('scheme', 'host', 'port'));
-				$base['path'] = rtrim($uri->toString( array('path')), '/\\');
-				if(JPATH_BASE == JPATH_ADMINISTRATOR) {
+			$config = JFactory::getConfig();
+			$live_site = $config->get('live_site');
+			if (trim($live_site) != '')
+			{
+				$uri = self::getInstance($live_site);
+				$base['prefix'] = $uri->toString(array('scheme', 'host', 'port'));
+				$base['path'] = rtrim($uri->toString(array('path')), '/\\');
+
+				if (JPATH_BASE == JPATH_ADMINISTRATOR) {
 					$base['path'] .= '/administrator';
 				}
-			} else {
-				$uri	         =& JURI::getInstance();
-				$base['prefix'] = $uri->toString( array('scheme', 'host', 'port'));
+			}
+			else
+			{
+				$uri			= self::getInstance();
+				$base['prefix'] = $uri->toString(array('scheme', 'host', 'port'));
 
-				if (strpos(php_sapi_name(), 'cgi') !== false && !empty($_SERVER['REQUEST_URI'])) {
-					//Apache CGI
-					$base['path'] =  rtrim(dirname(str_replace(array('"', '<', '>', "'"), '', $_SERVER["PHP_SELF"])), '/\\');
-				} else {
-					//Others
-					$base['path'] =  rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+				if (strpos(php_sapi_name(), 'cgi') !== false && !ini_get('cgi.fix_pathinfo') && !empty($_SERVER['REQUEST_URI']))
+				{
+					// PHP-CGI on Apache with "cgi.fix_pathinfo = 0"
+
+					// We shouldn't have user-supplied PATH_INFO in PHP_SELF in this case
+					// because PHP will not work with PATH_INFO at all.
+					$script_name =  $_SERVER['PHP_SELF'];
 				}
+				else
+				{
+					//Others
+					$script_name =  $_SERVER['SCRIPT_NAME'];
+				}
+
+				$base['path'] =  rtrim(dirname($script_name), '/\\');
 			}
 		}
 
@@ -234,64 +222,60 @@ class JURI extends JObject
 	/**
 	 * Returns the root URI for the request.
 	 *
-	 * @access	public
-	 * @static
-	 * @param	boolean $pathonly If false, prepend the scheme, host and port information. Default is false.
-	 * @return	string	The root URI string
+	 * @param	boolean $pathonly If false, prepend the scheme, host and port information. Default is false..
+	 * @return	string	The root URI string.
 	 * @since	1.5
 	 */
-	function root($pathonly = false, $path = null)
+	public static function root($pathonly = false, $path = null)
 	{
 		static $root;
 
 		// Get the scheme
-		if(!isset($root))
+		if (!isset($root))
 		{
-			$uri	        =& JURI::getInstance(JURI::base());
-			$root['prefix'] = $uri->toString( array('scheme', 'host', 'port') );
-			$root['path']   = rtrim($uri->toString( array('path') ), '/\\');
+			$uri			= self::getInstance(self::base());
+			$root['prefix'] = $uri->toString(array('scheme', 'host', 'port'));
+			$root['path']	= rtrim($uri->toString(array('path')), '/\\');
 		}
 
 		// Get the scheme
-		if(isset($path)) {
-			$root['path']    = $path;
+		if (isset($path)) {
+			$root['path']	= $path;
 		}
 
 		return $pathonly === false ? $root['prefix'].$root['path'].'/' : $root['path'];
 	}
 
 	/**
-	 * Returns the URL for the request, minus the query
+	 * Returns the URL for the request, minus the query.
 	 *
-	 * @access	public
 	 * @return	string
 	 * @since	1.5
 	 */
-	function current()
+	public static function current()
 	{
 		static $current;
 
-		// Get the current URL
+		// Get the current URL.
 		if (!isset($current))
 		{
-			$uri	 = & JURI::getInstance();
-			$current = $uri->toString( array('scheme', 'host', 'port', 'path'));
+			$uri	= self::getInstance();
+			$current = $uri->toString(array('scheme', 'host', 'port', 'path'));
 		}
 
 		return $current;
 	}
 
 	/**
-	 * Parse a given URI and populate the class fields
+	 * Parse a given URI and populate the class fields.
 	 *
-	 * @access	public
-	 * @param	string $uri The URI string to parse
-	 * @return	boolean True on success
+	 * @param	string $uri The URI string to parse.
+	 * @return	boolean True on success.
 	 * @since	1.5
 	 */
-	function parse($uri)
+	public function parse($uri)
 	{
-		//Initialize variables
+		// Initialise variables
 		$retval = false;
 
 		// Set the original URI to fall back on
@@ -301,12 +285,12 @@ class JURI extends JObject
 		 * Parse the URI and populate the object fields.  If URI is parsed properly,
 		 * set method return value to true.
 		 */
-		if ($_parts = $this->_parseURL($uri)) {
+		if ($_parts = JString::parse_url($uri)) {
 			$retval = true;
 		}
 
 		//We need to replace &amp; with & for parse_str to work right...
-		if(isset ($_parts['query']) && strpos($_parts['query'], '&amp;')) {
+		if (isset ($_parts['query']) && strpos($_parts['query'], '&amp;')) {
 			$_parts['query'] = str_replace('&amp;', '&', $_parts['query']);
 		}
 
@@ -321,19 +305,21 @@ class JURI extends JObject
 
 		//parse the query
 
-		if(isset ($_parts['query'])) parse_str($_parts['query'], $this->_vars);
+		if (isset($_parts['query'])) {
+			parse_str($_parts['query'], $this->_vars);
+		}
 		return $retval;
 	}
 
 	/**
-	 * Returns full uri string
+	 * Returns full uri string.
 	 *
 	 * @access	public
-	 * @param	array $parts An array specifying the parts to render
-	 * @return	string The rendered URI string
+	 * @param	array $parts An array specifying the parts to render.
+	 * @return	string The rendered URI string.
 	 * @since	1.5
 	 */
-	function toString($parts = array('scheme', 'user', 'pass', 'host', 'port', 'path', 'query', 'fragment'))
+	public function toString($parts = array('scheme', 'user', 'pass', 'host', 'port', 'path', 'query', 'fragment'))
 	{
 		$query = $this->getQuery(); //make sure the query is created
 
@@ -354,13 +340,12 @@ class JURI extends JObject
 	 * Adds a query variable and value, replacing the value if it
 	 * already exists and returning the old value.
 	 *
-	 * @access	public
-	 * @param	string $name Name of the query variable to set
-	 * @param	string $value Value of the query variable
-	 * @return	string Previous value for the query variable
+	 * @param	string $name Name of the query variable to set.
+	 * @param	string $value Value of the query variable.
+	 * @return	string Previous value for the query variable.
 	 * @since	1.5
 	 */
-	function setVar($name, $value)
+	public function setVar($name, $value)
 	{
 		$tmp = @$this->_vars[$name];
 		$this->_vars[$name] = $value;
@@ -372,33 +357,44 @@ class JURI extends JObject
 	}
 
 	/**
-	 * Returns a query variable by name
+	 * Checks if variable exists.
 	 *
-	 * @access	public
-	 * @param	string $name Name of the query variable to get
-	 * @return	array Query variables
+	 * @param	string $name Name of the query variable to check.
+	 * @return	bool exists.
+	 * @since	1.6
+	 */
+	public function hasVar($name)
+	{
+		return array_key_exists($name, $this->_vars);
+	}
+
+	/**
+	 * Returns a query variable by name.
+	 *
+	 * @param	string $name	Name of the query variable to get.
+	 * @param	string $default	Default value to return if the variable is not set.
+	 * @return	array Query variables.
 	 * @since	1.5
 	 */
-	function getVar($name = null, $default=null)
+	public function getVar($name, $default=null)
 	{
-		if(isset($this->_vars[$name])) {
+		if (array_key_exists($name, $this->_vars)) {
 			return $this->_vars[$name];
 		}
 		return $default;
 	}
 
 	/**
-	 * Removes an item from the query string variables if it exists
+	 * Removes an item from the query string variables if it exists.
 	 *
-	 * @access	public
-	 * @param	string $name Name of variable to remove
+	 * @param	string $name Name of variable to remove.
 	 * @since	1.5
 	 */
-	function delVar($name)
+	public function delVar($name)
 	{
-		if (in_array($name, array_keys($this->_vars)))
+		if (array_key_exists($name, $this->_vars))
 		{
-			unset ($this->_vars[$name]);
+			unset($this->_vars[$name]);
 
 			//empty the query
 			$this->_query = null;
@@ -407,24 +403,22 @@ class JURI extends JObject
 
 	/**
 	 * Sets the query to a supplied string in format:
-	 * 		foo=bar&x=y
+	 *		foo=bar&x=y
 	 *
-	 * @access	public
-	 * @param	mixed (array|string) $query The query string
+	 * @param	mixed (array|string) $query The query string.
 	 * @since	1.5
 	 */
-	function setQuery($query)
+	public function setQuery($query)
 	{
-		if(!is_array($query)) {
-			if(strpos($query, '&amp;') !== false)
+		if (is_array($query))
+		{
+			$this->_vars = $query;
+		} else {
+			if (strpos($query, '&amp;') !== false)
 			{
-			   $query = str_replace('&amp;','&',$query);
+				$query = str_replace('&amp;','&',$query);
 			}
 			parse_str($query, $this->_vars);
-		}
-
-		if(is_array($query)) {
-			$this->_vars = $query;
 		}
 
 		//empty the query
@@ -432,247 +426,227 @@ class JURI extends JObject
 	}
 
 	/**
-	 * Returns flat query string
+	 * Returns flat query string.
 	 *
-	 * @access	public
-	 * @return	string Query string
+	 * @return	string Query string.
 	 * @since	1.5
 	 */
-	function getQuery($toArray = false)
+	public function getQuery($toArray = false)
 	{
-		if($toArray) {
+		if ($toArray) {
 			return $this->_vars;
 		}
 
 		//If the query is empty build it first
-		if(is_null($this->_query)) {
-			$this->_query = $this->buildQuery($this->_vars);
+		if (is_null($this->_query)) {
+			$this->_query = self::buildQuery($this->_vars);
 		}
 
 		return $this->_query;
 	}
 
 	/**
-	 * Build a query from a array (reverse of the PHP parse_str())
+	 * Build a query from a array (reverse of the PHP parse_str()).
 	 *
-	 * @access	public
-	 * @return	string The resulting query string
+	 * @static
+	 * @return	string The resulting query string.
 	 * @since	1.5
 	 * @see	parse_str()
 	 */
-	function buildQuery ($params, $akey = null)
+	public static function buildQuery($params, $akey = null)
 	{
-		if ( !is_array($params) || count($params) == 0 ) {
+		if (!is_array($params) || count($params) == 0) {
 			return false;
 		}
 
-		$out = array();
-
-		//reset in case we are looping
-		if( !isset($akey) && !count($out) )  {
-			unset($out);
-			$out = array();
-		}
-
-		foreach ( $params as $key => $val )
-		{
-			if ( is_array($val) ) {
-				$out[] = JURI::buildQuery($val,$key);
-				continue;
-			}
-
-			$thekey = ( !$akey ) ? $key : $akey.'['.$key.']';
-			$out[] = $thekey."=".urlencode($val);
-		}
-
-		return implode("&",$out);
+		return urldecode(http_build_query($params, '', '&'));
 	}
 
 	/**
 	 * Get URI scheme (protocol)
-	 * 		ie. http, https, ftp, etc...
+	 *		ie. http, https, ftp, etc...
 	 *
-	 * @access	public
-	 * @return	string The URI scheme
+	 * @return	string The URI scheme.
 	 * @since	1.5
 	 */
-	function getScheme() {
+	public function getScheme()
+	{
 		return $this->_scheme;
 	}
 
 	/**
 	 * Set URI scheme (protocol)
-	 * 		ie. http, https, ftp, etc...
+	 *		ie. http, https, ftp, etc...
 	 *
-	 * @access	public
-	 * @param	string $scheme The URI scheme
+	 * @param	string $scheme The URI scheme.
 	 * @since	1.5
 	 */
-	function setScheme($scheme) {
+	public function setScheme($scheme)
+	{
 		$this->_scheme = $scheme;
 	}
 
 	/**
 	 * Get URI username
-	 * 		returns the username, or null if no username was specified
+	 *		returns the username, or null if no username was specified.
 	 *
-	 * @access	public
-	 * @return	string The URI username
+	 * @return	string The URI username.
 	 * @since	1.5
 	 */
-	function getUser() {
+	public function getUser()
+	{
 		return $this->_user;
 	}
 
 	/**
-	 * Set URI username
+	 * Set URI username.
 	 *
-	 * @access	public
-	 * @param	string $user The URI username
+	 * @param	string $user The URI username.
 	 * @since	1.5
 	 */
-	function setUser($user) {
+	public function setUser($user)
+	{
 		$this->_user = $user;
 	}
 
 	/**
 	 * Get URI password
-	 * 		returns the password, or null if no password was specified
+	 *		returns the password, or null if no password was specified.
 	 *
-	 * @access	public
-	 * @return	string The URI password
+	 * @return	string The URI password.
 	 * @since	1.5
 	 */
-	function getPass() {
+	public function getPass()
+	{
 		return $this->_pass;
 	}
 
 	/**
-	 * Set URI password
+	 * Set URI password.
 	 *
-	 * @access	public
-	 * @param	string $pass The URI password
+	 * @param	string $pass The URI password.
 	 * @since	1.5
 	 */
-	function setPass($pass) {
+	public function setPass($pass)
+	{
 		$this->_pass = $pass;
 	}
 
 	/**
 	 * Get URI host
-	 * 		returns the hostname/ip, or null if no hostname/ip was specified
+	 *		returns the hostname/ip, or null if no hostname/ip was specified.
 	 *
-	 * @access	public
-	 * @return	string The URI host
+	 * @return	string The URI host.
 	 * @since	1.5
 	 */
-	function getHost() {
+	public function getHost()
+	{
 		return $this->_host;
 	}
 
 	/**
-	 * Set URI host
+	 * Set URI host.
 	 *
-	 * @access	public
-	 * @param	string $host The URI host
+	 * @param	string $host The URI host.
 	 * @since	1.5
 	 */
-	function setHost($host) {
+	public function setHost($host)
+	{
 		$this->_host = $host;
 	}
 
 	/**
 	 * Get URI port
-	 * 		returns the port number, or null if no port was specified
+	 *		returns the port number, or null if no port was specified.
 	 *
-	 * @access	public
-	 * @return	int The URI port number
+	 * @return	int The URI port number.
 	 */
-	function getPort() {
+	public function getPort()
+	{
 		return (isset ($this->_port)) ? $this->_port : null;
 	}
 
 	/**
-	 * Set URI port
+	 * Set URI port.
 	 *
-	 * @access	public
-	 * @param	int $port The URI port number
+	 * @param	int $port The URI port number.
 	 * @since	1.5
 	 */
-	function setPort($port) {
+	public function setPort($port)
+	{
 		$this->_port = $port;
 	}
 
 	/**
-	 * Gets the URI path string
+	 * Gets the URI path string.
 	 *
-	 * @access	public
-	 * @return	string The URI path string
+	 * @return	string The URI path string.
 	 * @since	1.5
 	 */
-	function getPath() {
+	public function getPath()
+	{
 		return $this->_path;
 	}
 
 	/**
-	 * Set the URI path string
+	 * Set the URI path string.
 	 *
-	 * @access	public
-	 * @param	string $path The URI path string
+	 * @param	string $path The URI path string.
 	 * @since	1.5
 	 */
-	function setPath($path) {
+	public function setPath($path)
+	{
 		$this->_path = $this->_cleanPath($path);
 	}
 
 	/**
 	 * Get the URI archor string
-	 * 		everything after the "#"
+	 *		everything after the "#".
 	 *
-	 * @access	public
-	 * @return	string The URI anchor string
+	 * @return	string The URI anchor string.
 	 * @since	1.5
 	 */
-	function getFragment() {
+	public function getFragment()
+	{
 		return $this->_fragment;
 	}
 
 	/**
 	 * Set the URI anchor string
-	 * 		everything after the "#"
+	 *		everything after the "#".
 	 *
-	 * @access	public
-	 * @param	string $anchor The URI anchor string
+	 * @param	string $anchor The URI anchor string.
 	 * @since	1.5
 	 */
-	function setFragment($anchor) {
+	public function setFragment($anchor)
+	{
 		$this->_fragment = $anchor;
 	}
 
 	/**
-	 * Checks whether the current URI is using HTTPS
+	 * Checks whether the current URI is using HTTPS.
 	 *
-	 * @access	public
-	 * @return	boolean True if using SSL via HTTPS
+	 * @return	boolean True if using SSL via HTTPS.
 	 * @since	1.5
 	 */
-	function isSSL() {
+	public function isSSL()
+	{
 		return $this->getScheme() == 'https' ? true : false;
 	}
 
-	/** 
+	/**
 	 * Checks if the supplied URL is internal
 	 *
-	 * @access	public
-	 * @param 	string $url The URL to check
-	 * @return	boolean True if Internal
+	 * @param	string $url The URL to check.
+	 * @return	boolean True if Internal.
 	 * @since	1.5
 	 */
-	function isInternal($url) {
-		$uri =& JURI::getInstance($url);
+	public static function isInternal($url)
+	{
+		$uri = self::getInstance($url);
 		$base = $uri->toString(array('scheme', 'host', 'port', 'path'));
 		$host = $uri->toString(array('scheme', 'host', 'port'));
-		if(stripos($base, JURI::base()) !== 0 && !empty($host)) {
+		if (stripos($base, self::base()) !== 0 && !empty($host)) {
 			return false;
 		}
 		return true;
@@ -686,88 +660,36 @@ class JURI extends JObject
 	 * /foo/bar/../../boo.php => /boo.php
 	 * /foo/bar/.././/boo.php => /foo/boo.php
 	 *
-	 * @access	private
-	 * @param	string $uri The URI path to clean
-	 * @return	string Cleaned and resolved URI path
+	 * @param	string $uri The URI path to clean.
+	 * @return	string Cleaned and resolved URI path.
 	 * @since	1.5
 	 */
-	function _cleanPath($path)
+	private function _cleanPath($path)
 	{
 		$path = explode('/', preg_replace('#(/+)#', '/', $path));
 
-		for ($i = 0; $i < count($path); $i ++) {
-			if ($path[$i] == '.') {
-				unset ($path[$i]);
-				$path = array_values($path);
-				$i --;
-
-			}
-			elseif ($path[$i] == '..' AND ($i > 1 OR ($i == 1 AND $path[0] != ''))) {
-				unset ($path[$i]);
-				unset ($path[$i -1]);
-				$path = array_values($path);
-				$i -= 2;
-
-			}
-			elseif ($path[$i] == '..' AND $i == 1 AND $path[0] == '') {
-				unset ($path[$i]);
-				$path = array_values($path);
-				$i --;
-
-			} else {
-				continue;
+		for ($i = 0, $n = count($path); $i < $n; $i ++)
+		{
+			if ($path[$i] == '.' OR $path[$i] == '..')
+			{
+				if(($path[$i] == '.') OR ($path[$i] == '..' AND $i == 1 AND $path[0] == ''))
+				{
+					unset ($path[$i]);
+					$path = array_values($path);
+					$i --;
+					$n --;
+				}
+				elseif ($path[$i] == '..' AND ($i > 1 OR ($i == 1 AND $path[0] != '')))
+				{
+					unset ($path[$i]);
+					unset ($path[$i -1]);
+					$path = array_values($path);
+					$i -= 2;
+					$n -= 2;
+				}
 			}
 		}
 
 		return implode('/', $path);
 	}
-
-	/**
-	 * Backwards compatibility function for parse_url function
-	 *
-	 * This function solves different bugs in PHP versions lower then
-	 * 4.4, will be deprecated in future versions.
-	 *
-	 * @access	private
-	 * @return	array Associative array containing the URL parts
-	 * @since	1.5
-	 * @see parse_url()
-	 */
-	function _parseURL($uri)
-	{
-		$parts = array();
-		if (version_compare( phpversion(), '4.4' ) < 0)
-		{
-			$regex = "<^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\\?([^#]*))?(#(.*))?>";
-			$matches = array();
-			preg_match($regex, $uri, $matches, PREG_OFFSET_CAPTURE);
-
-			$authority = @$matches[4][0];
-			if (strpos($authority, '@') !== false) {
-				$authority = explode('@', $authority);
-				@list($parts['user'], $parts['pass']) = explode(':', $authority[0]);
-				$authority = $authority[1];
-			}
-
-			if (strpos($authority, ':') !== false) {
-				$authority = explode(':', $authority);
-				$parts['host'] = $authority[0];
-				$parts['port'] = $authority[1];
-			} else {
-				$parts['host'] = $authority;
-			}
-
-			$parts['scheme'] = @$matches[2][0];
-			$parts['path'] = @$matches[5][0];
-			$parts['query'] = @$matches[7][0];
-			$parts['fragment'] = @$matches[9][0];
-		}
-		else
-		{
-			$parts = @parse_url($uri);
-		}
-		return $parts;
-	}
-
-
 }

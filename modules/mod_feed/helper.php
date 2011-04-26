@@ -1,29 +1,25 @@
 <?php
 /**
-* @version		$Id: helper.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: helper.php 20926 2011-03-09 06:59:31Z infograf768 $
+ * @package		Joomla.Site
+ * @subpackage	mod_feed
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-/** ensure this file is being included by a parent file */
-defined('_JEXEC') or die('Direct Access to this location is not allowed.');
+// no direct access
+defined('_JEXEC') or die;
 
 class modFeedHelper
 {
-	function getFeed($params)
+	static function getFeed($params)
 	{
 		// module params
 		$rssurl	= $params->get('rssurl', '');
 
 		//  get RSS parsed object
 		$options = array();
-		$options['rssUrl'] 		= $rssurl;
+		$options['rssUrl']		= $rssurl;
 		if ($params->get('cache')) {
 			$options['cache_time']  = $params->get('cache_time', 15) ;
 			$options['cache_time']	*= 60;
@@ -31,7 +27,7 @@ class modFeedHelper
 			$options['cache_time'] = null;
 		}
 
-		$rssDoc =& JFactory::getXMLparser('RSS', $options);
+		$rssDoc = JFactory::getXMLParser('RSS', $options);
 
 		$feed = new stdclass();
 

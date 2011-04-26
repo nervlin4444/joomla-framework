@@ -1,48 +1,50 @@
 <?php
 /**
-* @version		$Id: help.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	HTML
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: help.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Framework
+ * @subpackage	HTML
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Renders a help popup window button
  *
- * @package 	Joomla.Framework
- * @subpackage		HTML
+ * @package		Joomla.Framework
+ * @subpackage	HTML
  * @since		1.5
  */
 class JButtonHelp extends JButton
 {
 	/**
-	 * Button type
-	 *
-	 * @access	protected
-	 * @var		string
+	 * @var		string	Button type
 	 */
-	var $_name = 'Help';
+	protected $_name = 'Help';
 
-	function fetchButton( $type='Help', $ref = '', $com = false )
+	/**
+	 * @param	string	$type		Unused string.
+	 * @param	string	$ref		The name of the help screen (its key reference).
+	 * @param	boolean	$com		Use the help file in the component directory.
+	 * @param	string	$override	Use this URL instead of any other.
+	 * @param	string	$component	Name of component to get Help (null for current component)
+	 *
+	 * @return	string
+	 * @since	1.5
+	 */
+	public function fetchButton($type = 'Help', $ref = '', $com = false, $override = null, $component = null)
 	{
-		$text	= JText::_('Help');
+		$text	= JText::_('JTOOLBAR_HELP');
 		$class	= $this->fetchIconClass('help');
-		$doTask	= $this->_getCommand($ref, $com);
+		$doTask	= $this->_getCommand($ref, $com, $override, $component);
 
-		$html	= "<a href=\"#\" onclick=\"$doTask\" class=\"toolbar\">\n";
-		$html .= "<span class=\"$class\" title=\"$text\">\n";
+		$html = "<a href=\"#\" onclick=\"$doTask\" rel=\"help\" class=\"toolbar\">\n";
+		$html .= "<span class=\"$class\">\n";
 		$html .= "</span>\n";
- 		$html	.= "$text\n";
-		$html	.= "</a>\n";
+		$html .= "$text\n";
+		$html .= "</a>\n";
 
 		return $html;
 	}
@@ -52,31 +54,32 @@ class JButtonHelp extends JButton
 	 *
 	 * Redefined from JButton class
 	 *
-	 * @access		public
-	 * @param		string	$name	Button name
 	 * @return		string	Button CSS Id
 	 * @since		1.5
 	 */
-	function fetchId($name)
+	public function fetchId()
 	{
-		return $this->_parent->_name.'-'."help";
+		return $this->_parent->getName().'-'."help";
 	}
 
 	/**
 	 * Get the JavaScript command for the button
 	 *
-	 * @access	private
-	 * @param	object	$definition	Button definition
+	 * @param	string	$ref		The name of the help screen (its key reference).
+	 * @param	boolean	$com		Use the help file in the component directory.
+	 * @param	string	$override	Use this URL instead of any other.
+	 * @param	string	$component	Name of component to get Help (null for current component)
+	 *
 	 * @return	string	JavaScript command string
 	 * @since	1.5
 	 */
-	function _getCommand($ref, $com)
+	protected function _getCommand($ref, $com, $override, $component)
 	{
 		// Get Help URL
 		jimport('joomla.language.help');
-		$url = JHelp::createURL($ref, $com);
-
-		$cmd = "popupWindow('$url', '".JText::_('Help', true)."', 640, 480, 1)";
+		$url = JHelp::createURL($ref, $com, $override, $component);
+		$url = htmlspecialchars($url, ENT_QUOTES);
+		$cmd = "popupWindow('$url', '".JText::_('JHELP', true)."', 700, 500, 1)";
 
 		return $cmd;
 	}

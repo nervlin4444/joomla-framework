@@ -1,24 +1,19 @@
 <?php
 /**
-* @version		$Id: link.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	HTML
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: link.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Framework
+ * @subpackage	HTML
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Renders a link button
  *
- * @package 	Joomla.Framework
+ * @package		Joomla.Framework
  * @subpackage	HTML
  * @since		1.5
  */
@@ -26,20 +21,18 @@ class JButtonLink extends JButton
 {
 	/**
 	 * Button type
-	 *
-	 * @access	protected
 	 * @var		string
 	 */
-	var $_name = 'Link';
+	protected $_name = 'Link';
 
-	function fetchButton( $type='Link', $name = 'back', $text = '', $url = null )
+	public function fetchButton($type='Link', $name = 'back', $text = '', $url = null)
 	{
 		$text	= JText::_($text);
 		$class	= $this->fetchIconClass($name);
 		$doTask	= $this->_getCommand($url);
 
 		$html	= "<a href=\"$doTask\">\n";
-		$html .= "<span class=\"$class\" title=\"$text\">\n";
+		$html .= "<span class=\"$class\">\n";
 		$html .= "</span>\n";
 		$html	.= "$text\n";
 		$html	.= "</a>\n";
@@ -50,24 +43,27 @@ class JButtonLink extends JButton
 	/**
 	 * Get the button CSS Id
 	 *
-	 * @access	public
+	 * @param	string	$type	The button type.
+	 * @param	string	$name	The name of the button.
+	 *
 	 * @return	string	Button CSS Id
 	 * @since	1.5
 	 */
-	function fetchId($name)
+	public function fetchId($type = 'Link', $name = '')
 	{
-		return $this->_parent->_name.'-'.$name;
+		return $this->_parent->getName().'-'.$name;
 	}
 
 	/**
 	 * Get the JavaScript command for the button
 	 *
-	 * @access	private
 	 * @param	object	$definition	Button definition
+	 *
 	 * @return	string	JavaScript command string
 	 * @since	1.5
 	 */
-	function _getCommand($url) {
+	protected function _getCommand($url)
+	{
 		return $url;
 	}
 }

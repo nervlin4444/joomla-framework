@@ -1,25 +1,21 @@
 <?php
 /**
-* @version		$Id: radio.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	Parameter
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: radio.php 20972 2011-03-16 13:57:36Z chdemko $
+ * @package		Joomla.Framework
+ * @subpackage	Parameter
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Renders a radio element
  *
- * @package 	Joomla.Framework
- * @subpackage		Parameter
+ * @package		Joomla.Framework
+ * @subpackage	Parameter
+ * @deprecated	JParameter is deprecated and will be removed in a future version. Use JForm instead.
  * @since		1.5
  */
 
@@ -31,18 +27,18 @@ class JElementRadio extends JElement
 	* @access	protected
 	* @var		string
 	*/
-	var	$_name = 'Radio';
+	protected $_name = 'Radio';
 
-	function fetchElement($name, $value, &$node, $control_name)
+	public function fetchElement($name, $value, &$node, $control_name)
 	{
 		$options = array ();
 		foreach ($node->children() as $option)
 		{
 			$val	= $option->attributes('value');
 			$text	= $option->data();
-			$options[] = JHTML::_('select.option', $val, JText::_($text));
+			$options[] = JHtml::_('select.option', $val, $text);
 		}
 
-		return JHTML::_('select.radiolist', $options, ''.$control_name.'['.$name.']', '', 'value', 'text', $value, $control_name.$name );
+		return JHtml::_('select.radiolist', $options, ''.$control_name.'['.$name.']', '', 'value', 'text', $value, $control_name.$name, true);
 	}
 }

@@ -1,32 +1,27 @@
 <?php
 /**
- * @version		$Id: router.php 10381 2008-06-01 03:35:53Z pasamio $
- * @package		Joomla
- * @subpackage	Banners
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant to the
- * GNU General Public License, and as distributed it includes or is derivative
- * of works licensed under the GNU General Public License or other free or open
- * source software licenses. See COPYRIGHT.php for copyright notices and
- * details.
+ * @version		$Id: router.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Site
+ * @subpackage	com_banners
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 /**
  * @param	array	A named array
  * @return	array
  */
-function BannersBuildRoute( &$query )
+function BannersBuildRoute(&$query)
 {
 	$segments = array();
 
 	if (isset($query['task'])) {
 		$segments[] = $query['task'];
-		unset( $query['task'] );
+		unset($query['task']);
 	}
-	if (isset($query['bid'])) {
-		$segments[] = $query['bid'];
-		unset( $query['bid'] );
+	if (isset($query['id'])) {
+		$segments[] = $query['id'];
+		unset($query['id']);
 	}
 
 	return $segments;
@@ -38,11 +33,11 @@ function BannersBuildRoute( &$query )
  *
  * Formats:
  *
- * index.php?/banners/task/bid/Itemid
+ * index.php?/banners/task/id/Itemid
  *
- * index.php?/banners/bid/Itemid
+ * index.php?/banners/id/Itemid
  */
-function BannersParseRoute( $segments )
+function BannersParseRoute($segments)
 {
 	$vars = array();
 
@@ -52,9 +47,9 @@ function BannersParseRoute( $segments )
 	if ($count)
 	{
 		$count--;
-		$segment = array_shift( $segments );
-		if (is_numeric( $segment )) {
-			$vars['bid'] = $segment;
+		$segment = array_shift($segments);
+		if (is_numeric($segment)) {
+			$vars['id'] = $segment;
 		} else {
 			$vars['task'] = $segment;
 		}
@@ -63,9 +58,9 @@ function BannersParseRoute( $segments )
 	if ($count)
 	{
 		$count--;
-		$segment = array_shift( $segments) ;
-		if (is_numeric( $segment )) {
-			$vars['bid'] = $segment;
+		$segment = array_shift($segments) ;
+		if (is_numeric($segment)) {
+			$vars['id'] = $segment;
 		}
 	}
 

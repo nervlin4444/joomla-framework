@@ -1,54 +1,49 @@
 <?php
 /**
-* @version		$Id: helper.php 11137 2008-10-15 19:47:01Z kdevine $
-* @package		Joomla
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: helper.php 20806 2011-02-21 19:44:59Z dextercowley $
+ * @package		Joomla.Site
+ * @subpackage	mod_related_items
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
 // no direct access
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') or die;
 
-require_once (JPATH_SITE.DS.'components'.DS.'com_content'.DS.'helpers'.DS.'route.php');
+require_once JPATH_SITE.'/components/com_content/helpers/route.php';
 
-class modRelatedItemsHelper
+abstract class modRelatedItemsHelper
 {
-	function getList($params)
+	public static function getList($params)
 	{
-		global $mainframe;
+		$db			= JFactory::getDbo();
+		$app		= JFactory::getApplication();
+		$user		= JFactory::getUser();
+		$userId		= (int) $user->get('id');
+		$count		= intval($params->get('count', 5));
+		$groups		= implode(',', $user->getAuthorisedViewLevels());
+		$date		= JFactory::getDate();
 
-		$db					=& JFactory::getDBO();
-		$user				=& JFactory::getUser();
+		$option		= JRequest::getCmd('option');
+		$view		= JRequest::getCmd('view');
 
-		$option				= JRequest::getCmd('option');
-		$view				= JRequest::getCmd('view');
+		$temp		= JRequest::getString('id');
+		$temp		= explode(':', $temp);
+		$id			= $temp[0];
 
-		$temp				= JRequest::getString('id');
-		$temp				= explode(':', $temp);
-		$id					= $temp[0];
-
-		$showDate			= $params->get('showDate', 0);
-
-		$nullDate			= $db->getNullDate();
-
-
-		$date =& JFactory::getDate();
-		$now  = $date->toMySQL();
-
-		$related			= array();
+		$showDate	= $params->get('showDate', 0);
+		$nullDate	= $db->getNullDate();
+		$now		= $date->toMySQL();
+		$related	= array();
+		$query		= $db->getQuery(true);
 
 		if ($option == 'com_content' && $view == 'article' && $id)
 		{
-
 			// select the meta keywords from the item
-			$query = 'SELECT metakey' .
-					' FROM #__content' .
-					' WHERE id = '.(int) $id;
+
+			$query->select('metakey');
+			$query->from('#__content');
+			$query->where('id = ' . (int) $id);
 			$db->setQuery($query);
 
 			if ($metakey = trim($db->loadResult()))
@@ -69,19 +64,30 @@ class modRelatedItemsHelper
 				if (count($likes))
 				{
 					// select other items based on the metakey field 'like' the keys found
-					$query = 'SELECT a.id, a.title, DATE_FORMAT(a.created, "%Y-%m-%d") AS created, a.sectionid, a.catid, cc.access AS cat_access, s.access AS sec_access, cc.published AS cat_state, s.published AS sec_state,' .
-							' CASE WHEN CHAR_LENGTH(a.alias) THEN CONCAT_WS(":", a.id, a.alias) ELSE a.id END as slug,'.
-							' CASE WHEN CHAR_LENGTH(cc.alias) THEN CONCAT_WS(":", cc.id, cc.alias) ELSE cc.id END as catslug'.
-							' FROM #__content AS a' .
-							' LEFT JOIN #__content_frontpage AS f ON f.content_id = a.id' .
-							' LEFT JOIN #__categories AS cc ON cc.id = a.catid' .
-							' LEFT JOIN #__sections AS s ON s.id = a.sectionid' .
-							' WHERE a.id != '.(int) $id .
-							' AND a.state = 1' .
-							' AND a.access <= ' .(int) $user->get('aid', 0) .
-							' AND ( CONCAT(",", REPLACE(a.metakey,", ",","),",") LIKE "%'.implode('%" OR CONCAT(",", REPLACE(a.metakey,", ",","),",") LIKE "%', $likes).'%" )' . //remove single space after commas in keywords
-							' AND ( a.publish_up = '.$db->Quote($nullDate).' OR a.publish_up <= '.$db->Quote($now).' )' .
-							' AND ( a.publish_down = '.$db->Quote($nullDate).' OR a.publish_down >= '.$db->Quote($now).' )';
+					$query->clear();
+					$query->select('a.id');
+					$query->select('a.title');
+					$query->select('DATE_FORMAT(a.created, "%Y-%m-%d") as created');
+					$query->select('a.catid');
+					$query->select('cc.access AS cat_access');
+					$query->select('cc.published AS cat_state');
+					$query->select('CASE WHEN CHAR_LENGTH(a.alias) THEN CONCAT_WS(":", a.id, a.alias) ELSE a.id END as slug');
+					$query->select('CASE WHEN CHAR_LENGTH(cc.alias) THEN CONCAT_WS(":", cc.id, cc.alias) ELSE cc.id END as catslug');
+					$query->from('#__content AS a');
+					$query->leftJoin('#__content_frontpage AS f ON f.content_id = a.id');
+					$query->leftJoin('#__categories AS cc ON cc.id = a.catid');
+					$query->where('a.id != ' . (int) $id);
+					$query->where('a.state = 1');
+					$query->where('a.access IN (' . $groups . ')');
+					$query->where('(CONCAT(",", REPLACE(a.metakey, ", ", ","), ",") LIKE "%'.implode('%" OR CONCAT(",", REPLACE(a.metakey, ", ", ","), ",") LIKE "%', $likes).'%")'); //remove single space after commas in keywords)
+					$query->where('(a.publish_up = '.$db->Quote($nullDate).' OR a.publish_up <= '.$db->Quote($now).')');
+					$query->where('(a.publish_down = '.$db->Quote($nullDate).' OR a.publish_down >= '.$db->Quote($now).')');
+
+					// Filter by language
+					if ($app->getLanguageFilter()) {
+						$query->where('a.language in (' . $db->Quote(JFactory::getLanguage()->getTag()) . ',' . $db->Quote('*') . ')');
+					}
+
 					$db->setQuery($query);
 					$temp = $db->loadObjectList();
 
@@ -89,9 +95,9 @@ class modRelatedItemsHelper
 					{
 						foreach ($temp as $row)
 						{
-							if (($row->cat_state == 1 || $row->cat_state == '') && ($row->sec_state == 1 || $row->sec_state == '') && ($row->cat_access <= $user->get('aid', 0) || $row->cat_access == '') && ($row->sec_access <= $user->get('aid', 0) || $row->sec_access == ''))
+							if ($row->cat_state == 1)
 							{
-								$row->route = JRoute::_(ContentHelperRoute::getArticleRoute($row->slug, $row->catslug, $row->sectionid));
+								$row->route = JRoute::_(ContentHelperRoute::getArticleRoute($row->slug, $row->catslug));
 								$related[] = $row;
 							}
 						}

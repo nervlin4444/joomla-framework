@@ -1,19 +1,14 @@
 <?php
 /**
- * @version		$Id: filterinput.php 11324 2008-12-05 19:06:24Z kdevine $
+ * @version		$Id: filterinput.php 21148 2011-04-14 17:30:08Z ian $
  * @package		Joomla.Framework
  * @subpackage	Filter
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant to the
- * GNU General Public License, and as distributed it includes or is derivative
- * of works licensed under the GNU General Public License or other free or open
- * source software licenses. See COPYRIGHT.php for copyright notices and
- * details.
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * JFilterInput is a class for filtering input from any data source
@@ -21,34 +16,66 @@ defined('JPATH_BASE') or die();
  * Forked from the php input filter library by: Daniel Morris <dan@rootcube.com>
  * Original Contributors: Gianpaolo Racca, Ghislain Picard, Marco Wandschneider, Chris Tobin and Andrew Eddie.
  *
- * @package 	Joomla.Framework
- * @subpackage		Filter
+ * @package		Joomla.Framework
+ * @subpackage	Filter
  * @since		1.5
  */
 class JFilterInput extends JObject
 {
-	var $tagsArray; // default = empty array
-	var $attrArray; // default = empty array
+	/**
+	 * @var		array	An array of permitted tags.
+	 * @since	1.5
+	 */
+	var $tagsArray;
 
-	var $tagsMethod; // default = 0
-	var $attrMethod; // default = 0
+	/**
+	 * @var		array	An array of permitted tag attributes.
+	 * @since	1.5
+	 */
+	var $attrArray;
 
-	var $xssAuto; // default = 1
+	/**
+	 * @var		int		WhiteList method = 0 (default), BlackList method = 1
+	 * @since	1.5
+	 */
+	var $tagsMethod;
+
+	/**
+	 * @var		int		WhiteList method = 0 (default), BlackList method = 1
+	 * @since	1.5
+	 */
+	var $attrMethod;
+
+	/**
+	 * @var		int		Only auto clean essentials = 0, Allow clean blacklisted tags/attr = 1
+	 * @since	1.5
+	 */
+	var $xssAuto;
+
+	/**
+	 * @var		array	A list of the default blacklisted tags.
+	 * @since	1.5
+	 */
 	var $tagBlacklist = array ('applet', 'body', 'bgsound', 'base', 'basefont', 'embed', 'frame', 'frameset', 'head', 'html', 'id', 'iframe', 'ilayer', 'layer', 'link', 'meta', 'name', 'object', 'script', 'style', 'title', 'xml');
+
+	/**
+	 * @var		array	A list of the default blacklisted tag attributes.
+	 * @since	1.5
+	 */
 	var $attrBlacklist = array ('action', 'background', 'codebase', 'dynsrc', 'lowsrc'); // also will strip ALL event handlers
 
 	/**
 	 * Constructor for inputFilter class. Only first parameter is required.
 	 *
 	 * @access	protected
-	 * @param	array	$tagsArray	list of user-defined tags
-	 * @param	array	$attrArray	list of user-defined attributes
+	 * @param	array	$tagsArray	List of user-defined tags
+	 * @param	array	$attrArray	List of user-defined attributes
 	 * @param	int		$tagsMethod	WhiteList method = 0, BlackList method = 1
 	 * @param	int		$attrMethod	WhiteList method = 0, BlackList method = 1
 	 * @param	int		$xssAuto	Only auto clean essentials = 0, Allow clean blacklisted tags/attr = 1
 	 * @since	1.5
 	 */
-	function __construct($tagsArray = array(), $attrArray = array(), $tagsMethod = 0, $attrMethod = 0, $xssAuto = 1)
+	public function __construct($tagsArray = array(), $attrArray = array(), $tagsMethod = 0, $attrMethod = 0, $xssAuto = 1)
 	{
 		// Make sure user defined arrays are in lowercase
 		$tagsArray = array_map('strtolower', (array) $tagsArray);
@@ -63,21 +90,17 @@ class JFilterInput extends JObject
 	}
 
 	/**
-	 * Returns a reference to an input filter object, only creating it if it doesn't already exist.
+	 * Returns an input filter object, only creating it if it doesn't already exist.
 	 *
-	 * This method must be invoked as:
-	 * 		<pre>  $filter = & JFilterInput::getInstance();</pre>
-	 *
-	 * @static
-	 * @param	array	$tagsArray	list of user-defined tags
-	 * @param	array	$attrArray	list of user-defined attributes
+	 * @param	array	$tagsArray	List of user-defined tags
+	 * @param	array	$attrArray	List of user-defined attributes
 	 * @param	int		$tagsMethod	WhiteList method = 0, BlackList method = 1
 	 * @param	int		$attrMethod	WhiteList method = 0, BlackList method = 1
 	 * @param	int		$xssAuto	Only auto clean essentials = 0, Allow clean blacklisted tags/attr = 1
 	 * @return	object	The JFilterInput object.
 	 * @since	1.5
 	 */
-	function & getInstance($tagsArray = array(), $attrArray = array(), $tagsMethod = 0, $attrMethod = 0, $xssAuto = 1)
+	public static function &getInstance($tagsArray = array(), $attrArray = array(), $tagsMethod = 0, $attrMethod = 0, $xssAuto = 1)
 	{
 		static $instances;
 
@@ -98,14 +121,13 @@ class JFilterInput extends JObject
 	 * Method to be called by another php script. Processes for XSS and
 	 * specified bad code.
 	 *
-	 * @access	public
 	 * @param	mixed	$source	Input string/array-of-string to be 'cleaned'
 	 * @param	string	$type	Return type for the variable (INT, FLOAT, BOOLEAN, WORD, ALNUM, CMD, BASE64, STRING, ARRAY, PATH, NONE)
 	 * @return	mixed	'Cleaned' version of input parameter
 	 * @since	1.5
 	 * @static
 	 */
-	function clean($source, $type='string')
+	public function clean($source, $type='string')
 	{
 		// Handle the type constraint
 		switch (strtoupper($type))
@@ -130,30 +152,28 @@ class JFilterInput extends JObject
 				break;
 
 			case 'WORD' :
-				$result = (string) preg_replace( '/[^A-Z_]/i', '', $source );
+				$result = (string) preg_replace('/[^A-Z_]/i', '', $source);
 				break;
 
 			case 'ALNUM' :
-				$result = (string) preg_replace( '/[^A-Z0-9]/i', '', $source );
+				$result = (string) preg_replace('/[^A-Z0-9]/i', '', $source);
 				break;
 
 			case 'CMD' :
-				$result = (string) preg_replace( '/[^A-Z0-9_\.-]/i', '', $source );
+				$result = (string) preg_replace('/[^A-Z0-9_\.-]/i', '', $source);
 				$result = ltrim($result, '.');
 				break;
 
 			case 'BASE64' :
-				$result = (string) preg_replace( '/[^A-Z0-9\/+=]/i', '', $source );
+				$result = (string) preg_replace('/[^A-Z0-9\/+=]/i', '', $source);
 				break;
 
 			case 'STRING' :
-				// Check for static usage and assign $filter the proper variable
-				if(isset($this) && is_a( $this, 'JFilterInput' )) {
-					$filter =& $this;
-				} else {
-					$filter =& JFilterInput::getInstance();
-				}
-				$result = (string) $filter->_remove($filter->_decode((string) $source));
+				$result = (string) $this->_remove($this->_decode((string) $source));
+				break;
+
+			case 'HTML' :
+				$result = (string) $this->_remove((string) $source);
 				break;
 
 			case 'ARRAY' :
@@ -167,32 +187,30 @@ class JFilterInput extends JObject
 				break;
 
 			case 'USERNAME' :
-				$result = (string) preg_replace( '/[\x00-\x1F\x7F<>"\'%&]/', '', $source );
+				$result = (string) preg_replace('/[\x00-\x1F\x7F<>"\'%&]/', '', $source);
 				break;
 
 			default :
-				// Check for static usage and assign $filter the proper variable
-				if(is_object($this) && get_class($this) == 'JFilterInput') {
-					$filter =& $this;
-				} else {
-					$filter =& JFilterInput::getInstance();
-				}
 				// Are we dealing with an array?
-				if (is_array($source)) {
+				if (is_array($source))
+				{
 					foreach ($source as $key => $value)
 					{
 						// filter element for XSS and other 'bad' code etc.
 						if (is_string($value)) {
-							$source[$key] = $filter->_remove($filter->_decode($value));
+							$source[$key] = $this->_remove($this->_decode($value));
 						}
 					}
 					$result = $source;
-				} else {
+				}
+				else
+				{
 					// Or a string?
 					if (is_string($source) && !empty ($source)) {
 						// filter source for XSS and other 'bad' code etc.
-						$result = $filter->_remove($filter->_decode($source));
-					} else {
+						$result = $this->_remove($this->_decode($source));
+					}
+					else {
 						// Not an array or string.. return the passed parameter
 						$result = $source;
 					}
@@ -205,12 +223,11 @@ class JFilterInput extends JObject
 	/**
 	 * Function to determine if contents of an attribute is safe
 	 *
-	 * @static
 	 * @param	array	$attrSubSet	A 2 element array for attributes name,value
 	 * @return	boolean True if bad code is detected
 	 * @since	1.5
 	 */
-	function checkAttribute($attrSubSet)
+	public static function checkAttribute($attrSubSet)
 	{
 		$attrSubSet[0] = strtolower($attrSubSet[0]);
 		$attrSubSet[1] = strtolower($attrSubSet[1]);
@@ -220,18 +237,16 @@ class JFilterInput extends JObject
 	/**
 	 * Internal method to iteratively remove all unwanted tags and attributes
 	 *
-	 * @access	protected
 	 * @param	string	$source	Input string to be 'cleaned'
 	 * @return	string	'Cleaned' version of input parameter
 	 * @since	1.5
 	 */
-	function _remove($source)
+	protected function _remove($source)
 	{
 		$loopCounter = 0;
 
 		// Iteration provides nested tag protection
-		while ($source != $this->_cleanTags($source))
-		{
+		while ($source != $this->_cleanTags($source)) {
 			$source = $this->_cleanTags($source);
 			$loopCounter ++;
 		}
@@ -241,32 +256,38 @@ class JFilterInput extends JObject
 	/**
 	 * Internal method to strip a string of certain tags
 	 *
-	 * @access	protected
-	 * @param	string	$source	Input string to be 'cleaned'
+	 * @param	string	Input string to be 'cleaned'
 	 * @return	string	'Cleaned' version of input parameter
 	 * @since	1.5
 	 */
-	function _cleanTags($source)
+	protected function _cleanTags($source)
 	{
-		/*
-		 * In the beginning we don't really have a tag, so everything is
-		 * postTag
-		 */
+		// First, pre-process this for illegal characters inside attribute values
+		$source = $this->_escapeAttributeValues($source);
+		// In the beginning we don't really have a tag, so everything is postTag
 		$preTag		= null;
 		$postTag	= $source;
 		$currentSpace = false;
-		$attr = '';	 // moffats: setting to null due to issues in migration system - undefined variable errors
+		$attr = '';	// moffats: setting to null due to issues in migration system - undefined variable errors
 
 		// Is there a tag? If so it will certainly start with a '<'
 		$tagOpen_start	= strpos($source, '<');
 
-		while ($tagOpen_start !== false)
-		{
+		while ($tagOpen_start !== false) {
 			// Get some information about the tag we are processing
 			$preTag			.= substr($postTag, 0, $tagOpen_start);
 			$postTag		= substr($postTag, $tagOpen_start);
 			$fromTagOpen	= substr($postTag, 1);
 			$tagOpen_end	= strpos($fromTagOpen, '>');
+			
+			// Check for mal-formed tag where we have a second '<' before the first '>'
+			$nextOpenTag = (strlen($postTag) > $tagOpen_start) ? strpos($postTag, '<', $tagOpen_start + 1) : false;
+			if (($nextOpenTag !== false) && ($nextOpenTag < $tagOpen_end)) {
+				// At this point we have a mal-formed tag -- remove the offending open
+				$postTag = substr($postTag, 0, $tagOpen_start) . substr($postTag, $tagOpen_start + 1);
+				$tagOpen_start	= strpos($postTag, '<');
+				continue;
+			}
 
 			// Let's catch any non-terminated tags and skip over them
 			if ($tagOpen_end === false) {
@@ -321,15 +342,44 @@ class JFilterInput extends JObject
 			 * Time to grab any attributes from the tag... need this section in
 			 * case attributes have spaces in the values.
 			 */
-			while ($currentSpace !== false)
-			{
+			while ($currentSpace !== false) {
 				$attr			= '';
 				$fromSpace		= substr($tagLeft, ($currentSpace +1));
+				$nextEqual		= strpos($fromSpace, '=');
 				$nextSpace		= strpos($fromSpace, ' ');
 				$openQuotes		= strpos($fromSpace, '"');
 				$closeQuotes	= strpos(substr($fromSpace, ($openQuotes +1)), '"') + $openQuotes +1;
+				
+				$startAtt = '';
+				$startAttPosition = 0;
+				
+				// Find position of equal and open quotes ignoring 
+				if (preg_match('#\s*=\s*\"#', $fromSpace, $matches, PREG_OFFSET_CAPTURE)) {
+					$startAtt = $matches[0][0];
+					$startAttPosition = $matches[0][1];
+					$closeQuotes = strpos(substr($fromSpace, ($startAttPosition + strlen($startAtt))), '"') + $startAttPosition + strlen($startAtt);
+					$nextEqual = $startAttPosition + strpos($startAtt, '=');
+					$openQuotes = $startAttPosition + strpos($startAtt, '"');
+					$nextSpace = strpos(substr($fromSpace, $closeQuotes), ' ') + $closeQuotes;
+				}
+
+				
 
 				// Do we have an attribute to process? [check for equal sign]
+				if ($fromSpace != '/' && (($nextEqual && $nextSpace && $nextSpace < $nextEqual ) || !$nextEqual))
+				{
+					if(!$nextEqual)
+					{
+						$attribEnd = strpos($fromSpace, '/') - 1;
+					} else {
+						$attribEnd = $nextSpace - 1;
+					}
+					// if there is an ending, use this, if not do not worry
+					if($attribEnd > 0)
+					{
+						$fromSpace = substr($fromSpace, $attribEnd + 1);
+					}
+				}
 				if (strpos($fromSpace, '=') !== false) {
 					/*
 					 * If the attribute value is wrapped in quotes we need to
@@ -369,14 +419,12 @@ class JFilterInput extends JObject
 
 			// If the tag is allowed lets append it to the output string
 			if ((!$tagFound && $this->tagsMethod) || ($tagFound && !$this->tagsMethod)) {
-
 				// Reconstruct tag with allowed attributes
 				if (!$isCloseTag) {
 					// Open or Single tag
 					$attrSet = $this->_cleanAttributes($attrSet);
 					$preTag .= '<'.$tagName;
-					for ($i = 0; $i < count($attrSet); $i ++)
-					{
+					for ($i = 0, $count = count($attrSet); $i < $count; $i ++) {
 						$preTag .= ' '.$attrSet[$i];
 					}
 
@@ -407,19 +455,18 @@ class JFilterInput extends JObject
 	/**
 	 * Internal method to strip a tag of certain attributes
 	 *
-	 * @access	protected
 	 * @param	array	$attrSet	Array of attribute pairs to filter
 	 * @return	array	Filtered array of attribute pairs
 	 * @since	1.5
 	 */
-	function _cleanAttributes($attrSet)
+	protected function _cleanAttributes($attrSet)
 	{
-		// Initialize variables
+		// Initialise variables.
 		$newSet = array();
 
+		$count = count($attrSet);
 		// Iterate through attribute pairs
-		for ($i = 0; $i < count($attrSet); $i ++)
-		{
+		for ($i = 0; $i < $count; $i ++) {
 			// Skip blank spaces
 			if (!$attrSet[$i]) {
 				continue;
@@ -427,7 +474,8 @@ class JFilterInput extends JObject
 
 			// Split into name/value pairs
 			$attrSubSet = explode('=', trim($attrSet[$i]), 2);
-			list ($attrSubSet[0]) = explode(' ', $attrSubSet[0]);
+			// Take the last attribute in case there is an attribute with no value
+			$attrSubSet[0] = array_pop(explode(' ', trim($attrSubSet[0])));
 
 			/*
 			 * Remove all "non-regular" attribute names
@@ -438,7 +486,9 @@ class JFilterInput extends JObject
 			}
 
 			// XSS attribute value filtering
-			if ($attrSubSet[1]) {
+			if (isset($attrSubSet[1])) {
+				// trim leading and trailing spaces
+				$attrSubSet[1] = trim($attrSubSet[1]);
 				// strips unicode, hex, etc
 				$attrSubSet[1] = str_replace('&#', '', $attrSubSet[1]);
 				// strip normal newline within attr value
@@ -451,10 +501,12 @@ class JFilterInput extends JObject
 				}
 				// strip slashes
 				$attrSubSet[1] = stripslashes($attrSubSet[1]);
+			} else {
+				continue;
 			}
 
 			// Autostrip script tags
-			if (JFilterInput::checkAttribute($attrSubSet)) {
+			if (self::checkAttribute($attrSubSet)) {
 				continue;
 			}
 
@@ -463,18 +515,18 @@ class JFilterInput extends JObject
 
 			// If the tag is allowed lets keep it
 			if ((!$attrFound && $this->attrMethod) || ($attrFound && !$this->attrMethod)) {
-
 				// Does the attribute have a value?
-				if ($attrSubSet[1]) {
+				if (empty($attrSubSet[1]) === false) {
 					$newSet[] = $attrSubSet[0].'="'.$attrSubSet[1].'"';
-				} elseif ($attrSubSet[1] == "0") {
+				} else if ($attrSubSet[1] === "0") {
 					/*
 					 * Special Case
 					 * Is the value 0?
 					 */
 					$newSet[] = $attrSubSet[0].'="0"';
 				} else {
-					$newSet[] = $attrSubSet[0].'="'.$attrSubSet[0].'"';
+					// Leave empty attributes alone
+					$newSet[] = $attrSubSet[0].'=""';
 				}
 			}
 		}
@@ -484,17 +536,21 @@ class JFilterInput extends JObject
 	/**
 	 * Try to convert to plaintext
 	 *
-	 * @access	protected
-	 * @param	string	$source
+	 * @param	string	$source The source string.
 	 * @return	string	Plaintext string
 	 * @since	1.5
 	 */
-	function _decode($source)
+	protected function _decode($source)
 	{
-		// entity decode
-		$trans_tbl = get_html_translation_table(HTML_ENTITIES);
-		foreach($trans_tbl as $k => $v) {
-			$ttr[$v] = utf8_encode($k);
+		static $ttr;
+
+		if(!is_array($ttr))
+		{
+			// entity decode
+			$trans_tbl = get_html_translation_table(HTML_ENTITIES);
+			foreach($trans_tbl as $k => $v) {
+				$ttr[$v] = utf8_encode($k);
+			}
 		}
 		$source = strtr($source, $ttr);
 		// convert decimal
@@ -503,4 +559,79 @@ class JFilterInput extends JObject
 		$source = preg_replace('/&#x([a-f0-9]+);/mei', "utf8_encode(chr(0x\\1))", $source); // hex notation
 		return $source;
 	}
+	
+	/**
+	 * Escape < > and " inside attribute values
+	 *
+	 * @param	string	$source The source string.
+	 * @return	string	Filtered string
+	 * @since	1.6
+	 */
+	protected function _escapeAttributeValues($source)
+	{
+		$alreadyFiltered = '';
+		$remainder = $source;
+		$badChars = array ('<', '"', '>');
+		$escapedChars = array ('&lt;', '&quot;', '&gt;');
+		// Process each portion based on presence of =" and "<space>, "/>, or ">
+		// See if there are any more attributes to process
+		while (preg_match('#\s*=\s*(\"|\')#', $remainder, $matches, PREG_OFFSET_CAPTURE))
+		{
+			// get the portion before the attribute value
+			$quotePosition = $matches[0][1];
+			$nextBefore = $quotePosition + strlen($matches[0][0]);
+			
+			// Figure out if we have a single or double quote and look for the matching closing quote
+			// Closing quote should be "/>, ">, "<space>, or " at the end of the string
+			$quote = substr($matches[0][0], -1);
+			$pregMatch = ($quote == '"') ? '#(\"\s*/\s*>|\"\s*>|\"\s+|\"$)#' : "#(\'\s*/\s*>|\'\s*>|\'\s+|\'$)#";
+			
+			// get the portion after attribute value
+			if (preg_match($pregMatch, substr($remainder, $nextBefore), $matches, PREG_OFFSET_CAPTURE)) {
+				// We have a closing quote
+				$nextAfter = $nextBefore + $matches[0][1];
+			} else {
+				// No closing quote
+				$nextAfter = strlen($remainder);
+			}
+			// Get the actual attribute value
+			$attributeValue = substr($remainder, $nextBefore, $nextAfter - $nextBefore);
+			// Escape bad chars
+			$attributeValue = str_replace($badChars, $escapedChars, $attributeValue);
+			$attributeValue = $this->_stripCSSExpressions($attributeValue);
+			$alreadyFiltered .= substr($remainder, 0, $nextBefore) . $attributeValue . $quote;
+			$remainder = substr($remainder, $nextAfter + 1);
+		}
+		
+		// At this point, we just have to return the $alreadyFiltered and the $remainder
+		return $alreadyFiltered . $remainder;
+	}
+	/**
+	 * Remove CSS Expressions in the form of <property>:expression(...)
+	 *
+	 * @param	string	$source The source string.
+	 * @return	string	Filtered string
+	 * @since	1.6
+	 */
+	protected function _stripCSSExpressions($source)
+	{
+		// Strip any comments out (in the form of /*...*/)
+		$test = preg_replace('#\/\*.*\*\/#U', '', $source);
+		// Test for :expression
+		if (!stripos($test, ':expression')) {
+			// Not found, so we are done
+			$return = $source;
+		} 
+		else {
+			// At this point, we have stripped out the comments and have found :expression
+			// Test stripped string for :expression followed by a '('
+			if (preg_match_all('#:expression\s*\(#', $test, $matches)) {
+				// If found, remove :expression
+				$test = str_ireplace(':expression', '', $test);
+				$return = $test;
+			}
+		}
+		return $return;
+	}
+	
 }

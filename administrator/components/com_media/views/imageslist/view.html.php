@@ -1,53 +1,49 @@
 <?php
 /**
-* @version		$Id: view.html.php 11666 2009-03-08 20:31:39Z willebil $
-* @package		Joomla
-* @subpackage	Media
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: view.html.php 21020 2011-03-27 06:52:01Z infograf768 $
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is included in Joomla!
-defined('_JEXEC') or die( 'Restricted access' );
+// No direct access
+defined('_JEXEC') or die;
 
-jimport( 'joomla.application.component.view');
+jimport('joomla.application.component.view');
 
 /**
- * HTML View class for the WebLinks component
+ * HTML View class for the Media component
  *
- * @static
- * @package		Joomla
- * @subpackage	Media
+ * @package		Joomla.Administrator
+ * @subpackage	com_media
  * @since 1.0
  */
 class MediaViewImagesList extends JView
 {
 	function display($tpl = null)
 	{
-		global $mainframe;
-
 		// Do not allow cache
 		JResponse::allowCache(false);
 
 		$app = JFactory::getApplication();
-		$append = '';
-		if ($app->getClientId() == 1) $append = 'administrator/';
 
-		JHTML::_('behavior.mootools');
-		JHTML::_('stylesheet', 'popup-imagelist.css', $append .'components/com_media/assets/');
+		$lang	= JFactory::getLanguage();
 
-		$document =& JFactory::getDocument();
+		JHtml::_('stylesheet','media/popup-imagelist.css', array(), true);
+		if ($lang->isRTL()) :
+			JHtml::_('stylesheet','media/popup-imagelist_rtl.css', array(), true);
+		endif;
+
+		$document = JFactory::getDocument();
 		$document->addScriptDeclaration("var ImageManager = window.parent.ImageManager;");
 
+		$images = $this->get('images');
+		$folders = $this->get('folders');
+		$state = $this->get('state');
+
 		$this->assign('baseURL', COM_MEDIA_BASEURL);
-		$this->assignRef('images', $this->get('images'));
-		$this->assignRef('folders', $this->get('folders'));
-		$this->assignRef('state', $this->get('state'));
+		$this->assignRef('images', $images);
+		$this->assignRef('folders', $folders);
+		$this->assignRef('state', $state);
 
 		parent::display($tpl);
 	}

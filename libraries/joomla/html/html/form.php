@@ -1,26 +1,21 @@
 <?php
 /**
- * @version		$Id: form.php 13341 2009-10-27 03:03:54Z ian $
+ * @version		$Id: form.php 20196 2011-01-09 02:40:25Z ian $
  * @package		Joomla.Framework
  * @subpackage	HTML
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant
- * to the GNU General Public License, and as distributed it includes or
- * is derivative of works licensed under the GNU General Public License or
- * other free or open source software licenses.
- * See COPYRIGHT.php for copyright notices and details.
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
-defined('JPATH_BASE') or die();
+
 /**
  * Utility class for form elements
  *
  * @static
- * @package 	Joomla.Framework
+ * @package		Joomla.Framework
  * @subpackage	HTML
  * @version		1.5
  */
-class JHTMLForm
+abstract class JHtmlForm
 {
 	/**
 	 * Displays a hidden token field to reduce the risk of CSRF exploits
@@ -31,7 +26,7 @@ class JHTMLForm
 	 * @return	void
 	 * @since	1.5
 	 */
-	function token()
+	public static function token()
 	{
 		return '<input type="hidden" name="'.JUtility::getToken().'" value="1" />';
 	}

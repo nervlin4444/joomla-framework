@@ -1,25 +1,21 @@
 <?php
 /**
-* @version		$Id: helpsites.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	Parameter
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: helpsites.php 20972 2011-03-16 13:57:36Z chdemko $
+ * @package		Joomla.Framework
+ * @subpackage	Parameter
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Renders a helpsites element
  *
- * @package 	Joomla.Framework
- * @subpackage		Parameter
+ * @package		Joomla.Framework
+ * @subpackage	Parameter
+ * @deprecated	JParameter is deprecated and will be removed in a future version. Use JForm instead.
  * @since		1.5
  */
 
@@ -31,15 +27,25 @@ class JElementHelpsites extends JElement
 	* @access	protected
 	* @var		string
 	*/
-	var	$_name = 'Helpsites';
+	protected $_name = 'Helpsites';
 
-	function fetchElement($name, $value, &$node, $control_name)
+	public function fetchElement($name, $value, &$node, $control_name)
 	{
 		jimport('joomla.language.help');
 
-		$helpsites 				= JHelp::createSiteList(JPATH_ADMINISTRATOR.DS.'help'.DS.'helpsites-15.xml', $value);
-		array_unshift($helpsites, JHTML::_('select.option', '', JText::_('local')));
+		// Get Joomla version.
+		$version = new JVersion();
+		$jver = explode( '.', $version->getShortVersion() );
 
-		return JHTML::_('select.genericlist',  $helpsites, ''.$control_name.'['.$name.']', ' class="inputbox"', 'value', 'text', $value, $control_name.$name );
+		$helpsites = JHelp::createSiteList(JPATH_ADMINISTRATOR.DS.'help'.DS.'helpsites-'.$jver[0].$jver[1].'.xml', $value);
+		array_unshift($helpsites, JHtml::_('select.option', '', JText::_('local')));
+
+		return JHtml::_('select.genericlist', $helpsites, $control_name .'['. $name .']',
+			array(
+				'id' => $control_name.$name,
+				'list.attr' => 'class="inputbox"',
+				'list.select' => $value
+			)
+		);
 	}
 }

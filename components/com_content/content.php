@@ -1,36 +1,20 @@
 <?php
 /**
- * @version		$Id: content.php 10381 2008-06-01 03:35:53Z pasamio $
- * @package		Joomla
- * @subpackage	Content
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant to the
- * GNU General Public License, and as distributed it includes or is derivative
- * of works licensed under the GNU General Public License or other free or open
- * source software licenses. See COPYRIGHT.php for copyright notices and
- * details.
+ * @version		$Id: content.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Site
+ * @subpackage	com_content
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 // no direct access
-defined('_JEXEC') or die('Restricted access');
+defined('_JEXEC') or die;
 
-// Require the com_content helper library
-require_once(JPATH_COMPONENT.DS.'controller.php');
-require_once(JPATH_COMPONENT.DS.'helpers'.DS.'query.php');
-require_once(JPATH_COMPONENT.DS.'helpers'.DS.'route.php');
+// Include dependancies
+jimport('joomla.application.component.controller');
+require_once JPATH_COMPONENT.'/helpers/route.php';
+require_once JPATH_COMPONENT.'/helpers/query.php';
 
-// Component Helper
-jimport('joomla.application.component.helper');
-
-// Create the controller
-$controller = new ContentController();
-
-// Register Extra tasks
-$controller->registerTask( 'new'  , 	'edit' );
-$controller->registerTask( 'apply', 	'save' );
-$controller->registerTask( 'apply_new', 'save' );
-
-// Perform the Request task
-$controller->execute(JRequest::getVar('task', null, 'default', 'cmd'));
+$controller = JController::getInstance('Content');
+$controller->execute(JRequest::getCmd('task'));
 $controller->redirect();

@@ -1,3 +1,9 @@
+/**
+ * @version		$Id: template.css 20246 2011-01-10 10:33:23Z eddieajau $
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
+
 /* CSS Document */
 html {
 	height: 100%;
@@ -9,6 +15,7 @@ body {
 	background: #fff;
 	height: 100%;
 	padding-bottom: 1px;
+	min-width: 960px;
 }
 
 body, div, p, td, span {
@@ -18,7 +25,7 @@ body, div, p, td, span {
 
 a:link, a:visited {
 	text-decoration: none;
-	color: #0B55C4;
+	color: #025A8D;
 }
 
 a:hover {
@@ -48,6 +55,30 @@ form {
 	padding: 0;
 }
 
+iframe {
+	border: 0;
+}
+
+td:first-child {
+	width: 180px;
+}
+
+.db-table td:first-child {
+	width: 200px;
+}
+
+.final-table td:first-child {
+	width: auto;
+}
+
+.sample-data td:first-child {
+	/*width: auto;*/
+}
+
+td.item + td {
+	text-align: left;
+}
+
 /* installer */
 #header1 {
 	background: url(../images/j_header_middle.png) repeat-x;
@@ -66,8 +97,18 @@ form {
 	font-size: 22px;
 	color: #fff;
 	font-weight: bold;
-	padding-left: 180px;
+	padding-left: 15px;
 	line-height: 44px;
+}
+
+#header3 span.logo {
+	display: block;
+	float: right;
+	padding: 7px 10px 0 0;
+}
+
+#header3 span.logo img {
+	border: 0 none;
 }
 
 #version {
@@ -107,7 +148,7 @@ form {
 }
 
 #stepbar div.box {
-	background:  url(../images/j_joomla_box.jpg) 50% 20px no-repeat;
+	background:  url(../images/j_joomla_box.png) 50% 20px no-repeat;
 	height: 140px;
 }
 
@@ -115,7 +156,7 @@ form {
 	margin: 0;
 	padding-bottom: 8px;
 	font-size: 20px;
-	color: #0B55C4;
+	color: #025A8D;
 	font-weight: bold;
 	background: url(../images/j_divider.png) 0 100% repeat-x;
 }
@@ -133,7 +174,7 @@ form {
 }
 
 .step-on {
-	color: #0B55C4;
+	color: #f48b06;
 }
 
 .step-grey {
@@ -156,7 +197,7 @@ form {
 span.step {
 	font-size: 20px;
 	line-height: 30px;
-	color: #0B55C4;
+	color: #025A8D;
 	font-weight: bold;
 	padding-left: 6px;
 }
@@ -249,13 +290,13 @@ span.step {
 
 .install-text {
 	float: left;
-	width: 40%;
+	width: 30%;
 	color: #444;
 }
 
 .install-body {
 	float: right;
-	width: 58%;
+	width: 68%;
 }
 
 .extra-padding {
@@ -273,19 +314,19 @@ span.step {
 	text-align: center;
 }
 
-.Yes, .Writeable {
+.green {
 	font-weight: bold;
 	color: #46882B;
 }
 
-.No, .Unwriteable {
+.red {
 	font-weight: bold;
 	color: #c00;
 }
 
 .content       { width: 100%; }
 .content .item { width: 50%; }
-.content2 .item { width: 30%; }
+.content2 .item { /*width: 30%; */}
 
 .license {
   padding: 0px;
@@ -297,6 +338,33 @@ span.step {
 	font-size: 14px;
 	font-weight: bold;
 	color: #c00;
+}
+
+dl#system-message {
+	border-left: 1px solid #cccccc;
+	border-right: 1px solid #cccccc;
+	margin: 0;
+	padding: 0.5em;
+}
+
+dl#system-message dt.error {
+	display: block;
+	color: black;
+	font-size: x-large;
+	font-weight: bold;
+}
+
+dl#system-message dd.error {
+	display: block;
+	padding-left: 0em;
+}
+
+dl#system-message dd.error ul {
+	display: block;
+}
+
+dl#system-message dd.error ul li {
+	display: block;
 }
 
 h3.title-smenu, h3.moofx-toggler {
@@ -318,7 +386,10 @@ div.moofx-slider {
   background: #fbfbfb;
 }
 
-.final-table { width: 100%; }
+.final-table {
+	width: 100%;
+	text-align: center;
+}
 
 td em {
 	color: #666;
@@ -336,6 +407,10 @@ div#javascript-warning {
 
 #theDefault input {
 
+}
+
+input.hidden {
+	display: none;
 }
 
 /* corners */
@@ -458,3 +533,84 @@ div#installer div.b div.b div.b {
    background: url(../images/j_crn_bl_light.png) 0 0 no-repeat;
 }
 
+/* make the radio buttons vertical to make room for long language strings */
+
+fieldset#jform_db_old label {
+	float: left;
+	clear: right;
+}
+
+fieldset#jform_db_old input {
+	float: left;
+	clear: left;
+}
+
+/* error messages and notices */
+
+.invalid {
+	color: red;
+	font-weight: bold;
+}
+
+input.invalid {
+	border: 1px solid red;
+}
+
+div.inlineError {
+	margin: 0 0.3em;
+	padding: 0.2em;
+	border-top: thick solid red;
+	border-bottom: thick solid red;
+	background: #ffff99;
+}
+
+#theDefaultErrorMessage {
+	font-family: monospace;
+}
+
+#system-message {
+	padding: 6pt 6pt;
+	margin: 0;
+	border-left: thin solid #cccccc;
+	border-right: thin solid #cccccc;
+}
+
+.message {
+	background: #fff6f6;
+}
+
+.notice {
+	background: #fff6f6;
+}
+
+#system-message dt,
+#system-message dd {
+	margin: 0;
+	padding: 3pt 6pt;
+	color: #cc0000;
+}
+
+#system-message dt.notice {
+	border-top: medium solid red;
+	font-size: larger;
+	font-weight: bold;
+}
+
+#system-message dd.notice {
+	border-bottom: medium solid red;
+}
+
+#system-message dt.message  {
+	border-top: medium solid red;
+	font-size: larger;
+	font-weight: bold;
+}
+
+#system-message dd.message {
+	border-bottom: medium solid red;
+}
+
+/* required field star color */
+.star {
+	color:#cc0000;
+}

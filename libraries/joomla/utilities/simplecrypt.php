@@ -1,25 +1,20 @@
 <?php
 /**
- * @version		$Id: simplecrypt.php 10707 2008-08-21 09:52:47Z eddieajau $
+ * @version		$Id: simplecrypt.php 21039 2011-03-31 15:47:46Z dextercowley $
  * @package		Joomla.Framework
  * @subpackage	Utilities
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant to the
- * GNU General Public License, and as distributed it includes or is derivative
- * of works licensed under the GNU General Public License or other free or open
- * source software licenses. See COPYRIGHT.php for copyright notices and
- * details.
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * JSimpleCrypt is a very simple encryption algorithm for encyrpting/decrypting strings
  *
  * @static
- * @package 	Joomla.Framework
+ * @package		Joomla.Framework
  * @subpackage	Utilities
  * @since		1.5
  */
@@ -47,7 +42,7 @@ class JSimpleCrypt extends JObject
 			$this->_key = (string) $key;
 		} else {
 			$conf = &JFactory::getConfig();
-			$this->_key = md5($conf->getValue('config.secret'));
+			$this->_key = md5($conf->get('secret'));
 		}
 	}
 
@@ -62,7 +57,7 @@ class JSimpleCrypt extends JObject
 	{
 		$ai = $this->_xorCharString($s);
 		$s1 = "";
-		for ($i = 0; $i < count($ai); $i++)
+		for ($i = 0, $count = count($ai); $i < $count; $i++)
 			$s1 = $s1 . $this->_intToHex((int) $ai[$i]);
 		return $s1;
 	}

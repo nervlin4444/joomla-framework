@@ -1,24 +1,19 @@
 <?php
 /**
-* @version		$Id: mod_toolbar.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: mod_toolbar.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Administrator
+ * @subpackage	mod_toolbar
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// no direct access
-defined( '_JEXEC' ) or die( 'Restricted access' );
+// No direct access.
+defined('_JEXEC') or die;
 
-//Import the JToolBar library
+// Import dependancies.
 jimport('joomla.html.toolbar');
 
-// Get the JComponent instance of JToolBar
-$bar = & JToolBar::getInstance('toolbar');
+// Get the toolbar.
+$toolbar = JToolBar::getInstance('toolbar')->render('toolbar');
 
-// Render the toolbar
-echo $bar->render('toolbar');
+require JModuleHelper::getLayoutPath('mod_toolbar', $params->get('layout', 'default'));

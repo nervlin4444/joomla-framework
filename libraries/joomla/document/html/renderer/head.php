@@ -1,19 +1,12 @@
 <?php
 /**
-* @version		$Id: head.php 11917 2009-05-29 19:37:05Z ian $
-* @package		Joomla.Framework
-* @subpackage	Document
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: head.php 20874 2011-03-03 17:05:10Z dextercowley $
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * JDocument head renderer
@@ -27,43 +20,40 @@ class JDocumentRendererHead extends JDocumentRenderer
 	/**
 	 * Renders the document head and returns the results as a string
 	 *
-	 * @access public
-	 * @param string 	$name		(unused)
-	 * @param array 	$params		Associative array of values
-	 * @return string	The output of the script
+	 * @param	string $name	(unused)
+	 * @param	array $params	Associative array of values
+	 * @return	string			The output of the script
 	 */
-	function render( $head = null, $params = array(), $content = null )
+	public function render($head, $params = array(), $content = null)
 	{
 		ob_start();
-
 		echo $this->fetchHead($this->_doc);
-
-		$contents = ob_get_contents();
+		$buffer = ob_get_contents();
 		ob_end_clean();
 
-		return $contents;
+		return $buffer;
 	}
 
 	/**
 	 * Generates the head html and return the results as a string
 	 *
-	 * @access public
 	 * @return string
 	 */
-	function fetchHead(&$document)
+	public function fetchHead(&$document)
 	{
+		// Trigger the onBeforeCompileHead event (skip for installation, since it causes an error)
+		$app = JFactory::getApplication();
+		$app->triggerEvent('onBeforeCompileHead');
 		// get line endings
-		$lnEnd = $document->_getLineEnd();
-		$tab = $document->_getTab();
-
+		$lnEnd	= $document->_getLineEnd();
+		$tab	= $document->_getTab();
 		$tagEnd	= ' />';
-
-		$strHtml = '';
+		$buffer	= '';
 
 		// Generate base tag (need to happen first)
 		$base = $document->getBase();
-		if(!empty($base)) {
-			$strHtml .= $tab.'<base href="'.$document->getBase().'" />'.$lnEnd;
+		if (!empty($base)) {
+			$buffer .= $tab.'<base href="'.$document->getBase().'" />'.$lnEnd;
 		}
 
 		// Generate META tags (needs to happen as early as possible in the head)
@@ -72,87 +62,115 @@ class JDocumentRendererHead extends JDocumentRenderer
 			foreach ($tag as $name => $content)
 			{
 				if ($type == 'http-equiv') {
-					$strHtml .= $tab.'<meta http-equiv="'.$name.'" content="'.$content.'"'.$tagEnd.$lnEnd;
-				} elseif ($type == 'standard') {
-					$strHtml .= $tab.'<meta name="'.$name.'" content="'.str_replace('"',"'",$content).'"'.$tagEnd.$lnEnd;
+					$content.= '; charset=' . $document->getCharset();
+					$buffer .= $tab.'<meta http-equiv="'.$name.'" content="'.htmlspecialchars($content).'"'.$tagEnd.$lnEnd;
+				}
+				else if ($type == 'standard') {
+					$buffer .= $tab.'<meta name="'.$name.'" content="'.htmlspecialchars($content).'"'.$tagEnd.$lnEnd;
 				}
 			}
 		}
 
-		$strHtml .= $tab.'<meta name="description" content="'.$document->getDescription().'" />'.$lnEnd;
-		$strHtml .= $tab.'<meta name="generator" content="'.$document->getGenerator().'" />'.$lnEnd;
+		// dont add empty descriptions
+		$documentDescription = $document->getDescription();
+		if ($documentDescription) {
+			$buffer .= $tab.'<meta name="description" content="'.htmlspecialchars($documentDescription).'" />'.$lnEnd;
+		}
 
-		$strHtml .= $tab.'<title>'.htmlspecialchars($document->getTitle()).'</title>'.$lnEnd;
+		$buffer .= $tab.'<meta name="generator" content="'.htmlspecialchars($document->getGenerator()).'" />'.$lnEnd;
+		$buffer .= $tab.'<title>'.htmlspecialchars($document->getTitle(), ENT_COMPAT, 'UTF-8').'</title>'.$lnEnd;
 
 		// Generate link declarations
 		foreach ($document->_links as $link) {
-			$strHtml .= $tab.$link.$tagEnd.$lnEnd;
+			$buffer .= $tab.$link.$tagEnd.$lnEnd;
 		}
 
 		// Generate stylesheet links
-		foreach ($document->_styleSheets as $strSrc => $strAttr )
+		foreach ($document->_styleSheets as $strSrc => $strAttr)
 		{
-			$strHtml .= $tab . '<link rel="stylesheet" href="'.$strSrc.'" type="'.$strAttr['mime'].'"';
-			if (!is_null($strAttr['media'])){
-				$strHtml .= ' media="'.$strAttr['media'].'" ';
+			$buffer .= $tab . '<link rel="stylesheet" href="'.$strSrc.'" type="'.$strAttr['mime'].'"';
+			if (!is_null($strAttr['media'])) {
+				$buffer .= ' media="'.$strAttr['media'].'" ';
 			}
 			if ($temp = JArrayHelper::toString($strAttr['attribs'])) {
-				$strHtml .= ' '.$temp;;
+				$buffer .= ' '.$temp;;
 			}
-			$strHtml .= $tagEnd.$lnEnd;
+			$buffer .= $tagEnd.$lnEnd;
 		}
 
 		// Generate stylesheet declarations
 		foreach ($document->_style as $type => $content)
 		{
-			$strHtml .= $tab.'<style type="'.$type.'">'.$lnEnd;
+			$buffer .= $tab.'<style type="'.$type.'">'.$lnEnd;
 
 			// This is for full XHTML support.
-			if ($document->_mime == 'text/html' ) {
-				$strHtml .= $tab.$tab.'<!--'.$lnEnd;
-			} else {
-				$strHtml .= $tab.$tab.'<![CDATA['.$lnEnd;
+			if ($document->_mime != 'text/html') {
+				$buffer .= $tab.$tab.'<![CDATA['.$lnEnd;
 			}
 
-			$strHtml .= $content . $lnEnd;
+			$buffer .= $content . $lnEnd;
 
 			// See above note
-			if ($document->_mime == 'text/html' ) {
-				$strHtml .= $tab.$tab.'-->'.$lnEnd;
-			} else {
-				$strHtml .= $tab.$tab.']]>'.$lnEnd;
+			if ($document->_mime != 'text/html') {
+				$buffer .= $tab.$tab.']]>'.$lnEnd;
 			}
-			$strHtml .= $tab.'</style>'.$lnEnd;
+			$buffer .= $tab.'</style>'.$lnEnd;
 		}
 
 		// Generate script file links
-		foreach ($document->_scripts as $strSrc => $strType) {
-			$strHtml .= $tab.'<script type="'.$strType.'" src="'.$strSrc.'"></script>'.$lnEnd;
+		foreach ($document->_scripts as $strSrc => $strAttr) {
+			$buffer .= $tab.'<script src="'.$strSrc.'"';
+			if (!is_null($strAttr['mime'])) {
+				$buffer .= ' type="'.$strAttr['mime'].'"';
+			}
+			if ($strAttr['defer']) {
+				$buffer .= ' defer="defer"';
+			}
+			if ($strAttr['async']) {
+				$buffer .= ' async="async"';
+			}
+			$buffer .= '></script>'.$lnEnd;
 		}
 
 		// Generate script declarations
 		foreach ($document->_script as $type => $content)
 		{
-			$strHtml .= $tab.'<script type="'.$type.'">'.$lnEnd;
+			$buffer .= $tab.'<script type="'.$type.'">'.$lnEnd;
 
 			// This is for full XHTML support.
-			if ($document->_mime != 'text/html' ) {
-				$strHtml .= $tab.$tab.'<![CDATA['.$lnEnd;
+			if ($document->_mime != 'text/html') {
+				$buffer .= $tab.$tab.'<![CDATA['.$lnEnd;
 			}
 
-			$strHtml .= $content.$lnEnd;
+			$buffer .= $content.$lnEnd;
 
 			// See above note
-			if ($document->_mime != 'text/html' ) {
-				$strHtml .= $tab.$tab.'// ]]>'.$lnEnd;
+			if ($document->_mime != 'text/html') {
+				$buffer .= $tab.$tab.']]>'.$lnEnd;
 			}
-			$strHtml .= $tab.'</script>'.$lnEnd;
+			$buffer .= $tab.'</script>'.$lnEnd;
+		}
+
+		// Generate script language declarations.
+		if (count(JText::script())) {
+			$buffer .= $tab.'<script type="text/javascript">'.$lnEnd;
+			$buffer .= $tab.$tab.'(function() {'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.'var strings = '.json_encode(JText::script()).';'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.'if (typeof Joomla == \'undefined\') {'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.$tab.'Joomla = {};'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.$tab.'Joomla.JText = strings;'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.'}'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.'else {'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.$tab.'Joomla.JText.load(strings);'.$lnEnd;
+			$buffer .= $tab.$tab.$tab.'}'.$lnEnd;
+			$buffer .= $tab.$tab.'})();'.$lnEnd;
+			$buffer .= $tab.'</script>'.$lnEnd;
 		}
 
 		foreach($document->_custom as $custom) {
-			$strHtml .= $tab.$custom.$lnEnd;
+			$buffer .= $tab.$custom.$lnEnd;
 		}
 
-		return $strHtml;
+		return $buffer;
 	}
 }

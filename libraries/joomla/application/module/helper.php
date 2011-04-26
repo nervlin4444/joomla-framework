@@ -1,19 +1,12 @@
 <?php
 /**
-* @version		$Id: helper.php 10707 2008-08-21 09:52:47Z eddieajau $
-* @package		Joomla.Framework
-* @subpackage	Application
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: helper.php 21091 2011-04-06 05:53:50Z infograf768 $
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 // Import library dependencies
 jimport('joomla.application.component.helper');
@@ -26,20 +19,20 @@ jimport('joomla.application.component.helper');
  * @subpackage	Application
  * @since		1.5
  */
-class JModuleHelper
+abstract class JModuleHelper
 {
 	/**
 	 * Get module by name (real, eg 'Breadcrumbs' or folder, eg 'mod_breadcrumbs')
 	 *
-	 * @access	public
-	 * @param	string 	$name	The name of the module
-	 * @param	string	$title	The title of the module, optional
+	 * @param	string	The name of the module
+	 * @param	string	The title of the module, optional
+	 *
 	 * @return	object	The Module object
 	 */
-	function &getModule($name, $title = null )
+	public static function &getModule($name, $title = null)
 	{
 		$result		= null;
-		$modules	=& JModuleHelper::_load();
+		$modules	= JModuleHelper::_load();
 		$total		= count($modules);
 		for ($i = 0; $i < $total; $i++)
 		{
@@ -47,16 +40,16 @@ class JModuleHelper
 			if ($modules[$i]->name == $name)
 			{
 				// Match the title if we're looking for a specific instance of the module
-				if ( ! $title || $modules[$i]->title == $title )
+				if (!$title || $modules[$i]->title == $title)
 				{
-					$result =& $modules[$i];
+					$result = &$modules[$i];
 					break;	// Found it
 				}
 			}
 		}
 
 		// if we didn't find it, and the name is mod_something, create a dummy object
-		if (is_null( $result ) && substr( $name, 0, 4 ) == 'mod_')
+		if (is_null($result) && substr($name, 0, 4) == 'mod_')
 		{
 			$result				= new stdClass;
 			$result->id			= 0;
@@ -76,26 +69,30 @@ class JModuleHelper
 	/**
 	 * Get modules by position
 	 *
-	 * @access public
-	 * @param string 	$position	The position of the module
+	 * @param string	$position	The position of the module
+	 *
 	 * @return array	An array of module objects
 	 */
-	function &getModules($position)
+	public static function &getModules($position)
 	{
-		$position	= strtolower( $position );
+		$app		= JFactory::getApplication();
+		$position	= strtolower($position);
 		$result		= array();
 
-		$modules =& JModuleHelper::_load();
+		$modules = JModuleHelper::_load();
 
 		$total = count($modules);
-		for($i = 0; $i < $total; $i++) {
-			if($modules[$i]->position == $position) {
-				$result[] =& $modules[$i];
+		for ($i = 0; $i < $total; $i++)
+		{
+			if ($modules[$i]->position == $position) {
+				$result[] = &$modules[$i];
 			}
 		}
-		if(count($result) == 0) {
-			if(JRequest::getBool('tp')) {
-				$result[0] = JModuleHelper::getModule( 'mod_'.$position );
+		if (count($result) == 0)
+		{
+			if (JRequest::getBool('tp') && JComponentHelper::getParams('com_templates')->get('template_positions_display'))
+			{
+				$result[0] = JModuleHelper::getModule('mod_'.$position);
 				$result[0]->title = $position;
 				$result[0]->content = $position;
 				$result[0]->position = $position;
@@ -108,71 +105,64 @@ class JModuleHelper
 	/**
 	 * Checks if a module is enabled
 	 *
-	 * @access	public
-	 * @param   string 	$module	The module name
+	 * @param	string	The module name
+	 *
 	 * @return	boolean
 	 */
-	function isEnabled( $module )
+	public static function isEnabled($module)
 	{
-		$result = &JModuleHelper::getModule( $module);
+		$result = JModuleHelper::getModule($module);
 		return (!is_null($result));
 	}
 
-	function renderModule($module, $attribs = array())
+	/**
+	 * Render the module.
+	 *
+	 * @param	object	A module object.
+	 * @param	array	An array of attributes for the module (probably from the XML).
+	 *
+	 * @return	strign	The HTML content of the module output.
+	 */
+	public static function renderModule($module, $attribs = array())
 	{
 		static $chrome;
-		global $mainframe, $option;
 
-		$scope = $mainframe->scope; //record the scope
-		$mainframe->scope = $module->module;  //set scope to component name
+		$option = JRequest::getCmd('option');
+		$app	= JFactory::getApplication();
 
-		// Handle legacy globals if enabled
-		if ($mainframe->getCfg('legacy'))
-		{
-			// Include legacy globals
-			global $my, $database, $acl, $mosConfig_absolute_path;
+		// Record the scope.
+		$scope	= $app->scope;
 
-			// Get the task variable for local scope
-			$task = JRequest::getString('task');
-
-			// For backwards compatibility extract the config vars as globals
-			$registry =& JFactory::getConfig();
-			foreach (get_object_vars($registry->toObject()) as $k => $v) {
-				$name = 'mosConfig_'.$k;
-				$$name = $v;
-			}
-			$contentConfig = &JComponentHelper::getParams( 'com_content' );
-			foreach (get_object_vars($contentConfig->toObject()) as $k => $v)
-			{
-				$name = 'mosConfig_'.$k;
-				$$name = $v;
-			}
-			$usersConfig = &JComponentHelper::getParams( 'com_users' );
-			foreach (get_object_vars($usersConfig->toObject()) as $k => $v)
-			{
-				$name = 'mosConfig_'.$k;
-				$$name = $v;
-			}
-		}
+		// Set scope to component name
+		$app->scope = $module->module;
 
 		// Get module parameters
-		$params = new JParameter( $module->params );
+		$params = new JRegistry;
+		$params->loadJSON($module->params);
 
 		// Get module path
 		$module->module = preg_replace('/[^A-Z0-9_\.-]/i', '', $module->module);
-		$path = JPATH_BASE.DS.'modules'.DS.$module->module.DS.$module->module.'.php';
+		$path = JPATH_BASE.'/modules/'.$module->module.'/'.$module->module.'.php';
 
 		// Load the module
-		if (!$module->user && file_exists( $path ) && empty($module->content))
+		if (!$module->user && file_exists($path))
 		{
-			$lang =& JFactory::getLanguage();
-			$lang->load($module->module);
+			$lang = JFactory::getLanguage();
+			// 1.5 or Core then
+			// 1.6 3PD
+				$lang->load($module->module, JPATH_BASE, null, false, false)
+			||	$lang->load($module->module, dirname($path), null, false, false)
+			||	$lang->load($module->module, JPATH_BASE, $lang->getDefault(), false, false)
+			||	$lang->load($module->module, dirname($path), $lang->getDefault(), false, false);
+
+
 
 			$content = '';
 			ob_start();
 			require $path;
 			$module->content = ob_get_contents().$content;
 			ob_end_clean();
+
 		}
 
 		// Load the module chrome functions
@@ -180,23 +170,23 @@ class JModuleHelper
 			$chrome = array();
 		}
 
-		require_once (JPATH_BASE.DS.'templates'.DS.'system'.DS.'html'.DS.'modules.php');
-		$chromePath = JPATH_BASE.DS.'templates'.DS.$mainframe->getTemplate().DS.'html'.DS.'modules.php';
-		if (!isset( $chrome[$chromePath]))
+		require_once JPATH_THEMES.'/system/html/modules.php';
+		$chromePath = JPATH_THEMES.'/'.$app->getTemplate().'/html/modules.php';
+		if (!isset($chrome[$chromePath]))
 		{
 			if (file_exists($chromePath)) {
-				require_once ($chromePath);
+				require_once $chromePath;
 			}
 			$chrome[$chromePath] = true;
 		}
 
 		//make sure a style is set
-		if(!isset($attribs['style'])) {
+		if (!isset($attribs['style'])) {
 			$attribs['style'] = 'none';
 		}
 
 		//dynamically add outline style
-		if(JRequest::getBool('tp')) {
+		if (JRequest::getBool('tp') && JComponentHelper::getParams('com_templates')->get('template_positions_display')) {
 			$attribs['style'] .= ' outline';
 		}
 
@@ -216,7 +206,7 @@ class JModuleHelper
 			}
 		}
 
-		$mainframe->scope = $scope; //revert the scope
+		$app->scope = $scope; //revert the scope
 
 		return $module->content;
 	}
@@ -226,22 +216,32 @@ class JModuleHelper
 	 *
 	 * @static
 	 * @param	string	$module	The name of the module
-	 * @param	string	$layout	The name of the module layout
+	 * @param	string	$layout	The name of the module layout. If alternative layout, in the form template:filename.
 	 * @return	string	The path to the module layout
 	 * @since	1.5
 	 */
-	function getLayoutPath($module, $layout = 'default')
+	public static function getLayoutPath($module, $layout = 'default')
 	{
-		global $mainframe;
+		$template = JFactory::getApplication()->getTemplate();
+		$defaultLayout = $layout;
+		if (strpos($layout, ':') !== false )
+		{
+			// Get the template and file name from the string
+			$temp = explode(':', $layout);
+			$template = ($temp[0] == '_') ? $template : $temp[0];
+			$layout = $temp[1];
+			$defaultLayout = ($temp[1]) ? $temp[1] : 'default';
+		}
 
 		// Build the template and base path for the layout
-		$tPath = JPATH_BASE.DS.'templates'.DS.$mainframe->getTemplate().DS.'html'.DS.$module.DS.$layout.'.php';
-		$bPath = JPATH_BASE.DS.'modules'.DS.$module.DS.'tmpl'.DS.$layout.'.php';
+		$tPath = JPATH_THEMES.'/'.$template.'/html/'.$module.'/'.$layout.'.php';
+		$bPath = JPATH_BASE.'/modules/'.$module.'/tmpl/'.$defaultLayout.'.php';
 
 		// If the template has a layout override use it
 		if (file_exists($tPath)) {
 			return $tPath;
-		} else {
+		}
+		else {
 			return $bPath;
 		}
 	}
@@ -249,59 +249,195 @@ class JModuleHelper
 	/**
 	 * Load published modules
 	 *
-	 * @access	private
 	 * @return	array
 	 */
-	function &_load()
+	protected static function &_load()
 	{
-		global $mainframe, $Itemid;
+		static $clean;
 
-		static $modules;
-
-		if (isset($modules)) {
-			return $modules;
+		if (isset($clean)) {
+			return $clean;
 		}
 
-		$user	=& JFactory::getUser();
-		$db		=& JFactory::getDBO();
+		$Itemid 	= JRequest::getInt('Itemid');
+		$app		= JFactory::getApplication();
+		$user		= JFactory::getUser();
+		$groups		= implode(',', $user->getAuthorisedViewLevels());
+		$lang 		= JFactory::getLanguage()->getTag();
+		$clientId 	= (int) $app->getClientId();
 
-		$aid	= $user->get('aid', 0);
+		$cache 		= JFactory::getCache ('com_modules', '');
+		$cacheid 	= md5(serialize(array($Itemid, $groups, $clientId, $lang)));
 
-		$modules	= array();
+		if (!($clean = $cache->get($cacheid))) {
+			$db	= JFactory::getDbo();
 
-		$wheremenu = isset( $Itemid ) ? ' AND ( mm.menuid = '. (int) $Itemid .' OR mm.menuid = 0 )' : '';
+			$query = new JDatabaseQuery;
+			$query->select('id, title, module, position, content, showtitle, params, mm.menuid');
+			$query->from('#__modules AS m');
+			$query->join('LEFT','#__modules_menu AS mm ON mm.moduleid = m.id');
+			$query->where('m.published = 1');
 
-		$query = 'SELECT id, title, module, position, content, showtitle, control, params'
-			. ' FROM #__modules AS m'
-			. ' LEFT JOIN #__modules_menu AS mm ON mm.moduleid = m.id'
-			. ' WHERE m.published = 1'
-			. ' AND m.access <= '. (int)$aid
-			. ' AND m.client_id = '. (int)$mainframe->getClientId()
-			. $wheremenu
-			. ' ORDER BY position, ordering';
+			$date = JFactory::getDate();
+			$now = $date->toMySQL();
+			$nullDate = $db->getNullDate();
+			$query->where('(m.publish_up = '.$db->Quote($nullDate).' OR m.publish_up <= '.$db->Quote($now).')');
+			$query->where('(m.publish_down = '.$db->Quote($nullDate).' OR m.publish_down >= '.$db->Quote($now).')');
 
-		$db->setQuery( $query );
+			$query->where('m.access IN ('.$groups.')');
+			$query->where('m.client_id = '. $clientId);
+			$query->where('(mm.menuid = '. (int) $Itemid .' OR mm.menuid <= 0)');
 
-		if (null === ($modules = $db->loadObjectList())) {
-			JError::raiseWarning( 'SOME_ERROR_CODE', JText::_( 'Error Loading Modules' ) . $db->getErrorMsg());
-			return false;
+			// Filter by language
+			if ($app->isSite() && $app->getLanguageFilter()) {
+				$query->where('m.language IN (' . $db->Quote($lang) . ',' . $db->Quote('*') . ')');
+			}
+
+			$query->order('position, ordering');
+
+			// Set the query
+			$db->setQuery($query);
+			$modules = $db->loadObjectList();
+			$clean	= array();
+
+			if($db->getErrorNum()){
+				JError::raiseWarning(500, JText::sprintf('JLIB_APPLICATION_ERROR_MODULE_LOAD', $db->getErrorMsg()));
+				return $clean;
+			}
+
+			// Apply negative selections and eliminate duplicates
+			$negId	= $Itemid ? -(int)$Itemid : false;
+			$dupes	= array();
+			for ($i = 0, $n = count($modules); $i < $n; $i++)
+			{
+				$module = &$modules[$i];
+
+				// The module is excluded if there is an explicit prohibition, or if
+				// the Itemid is missing or zero and the module is in exclude mode.
+				$negHit	= ($negId === (int) $module->menuid)
+						|| (!$negId && (int)$module->menuid < 0);
+
+				if (isset($dupes[$module->id]))
+				{
+					// If this item has been excluded, keep the duplicate flag set,
+					// but remove any item from the cleaned array.
+					if ($negHit) {
+						unset($clean[$module->id]);
+					}
+					continue;
+				}
+				$dupes[$module->id] = true;
+
+				// Only accept modules without explicit exclusions.
+				if (!$negHit)
+				{
+					//determine if this is a custom module
+					$file				= $module->module;
+					$custom				= substr($file, 0, 4) == 'mod_' ?  0 : 1;
+					$module->user		= $custom;
+					// Custom module name is given by the title field, otherwise strip off "com_"
+					$module->name		= $custom ? $module->title : substr($file, 4);
+					$module->style		= null;
+					$module->position	= strtolower($module->position);
+					$clean[$module->id]	= $module;
+				}
+			}
+			unset($dupes);
+			// Return to simple indexing that matches the query order.
+			$clean = array_values($clean);
+
+			$cache->store($clean, $cacheid);
 		}
 
-		$total = count($modules);
-		for($i = 0; $i < $total; $i++)
-		{
-			//determine if this is a custom module
-			$file					= $modules[$i]->module;
-			$custom 				= substr( $file, 0, 4 ) == 'mod_' ?  0 : 1;
-			$modules[$i]->user  	= $custom;
-			// CHECK: custom module name is given by the title field, otherwise it's just 'om' ??
-			$modules[$i]->name		= $custom ? $modules[$i]->title : substr( $file, 4 );
-			$modules[$i]->style		= null;
-			$modules[$i]->position	= strtolower($modules[$i]->position);
-		}
-
-		return $modules;
+		return $clean;
 	}
 
-}
+	/**
+	* Module cache helper
+	*
+	* Caching modes:
+	* to be set in XML:
+	* 'static' - one cache file for all pages with the same module parameters
+	* 'oldstatic' - 1.5. definition of module caching, one cache file for all pages with the same module id and user aid,
+	* 'itemid' - changes on itemid change,
+	* to be called from inside the module:
+	* 'safeuri' - id created from $cacheparams->modeparams array,
+	* 'id' - module sets own cache id's
+	*
+	* @static
+	* @param	object	$module	Module object
+	* @param	object	$moduleparams module parameters
+	* @param	object	$cacheparams module cache parameters - id or url parameters, depending on the module cache mode
+	* @param	array	$params - parameters for given mode - calculated id or an array of safe url parameters and their variable types, for valid values see {@link JFilterInput::clean()}.
+	*
+	* @since	1.6
+	*/
+	public static function moduleCache($module, $moduleparams, $cacheparams)
+	{
+		if(!isset ($cacheparams->modeparams)) {
+			$cacheparams->modeparams=null;
+		}
 
+		if(!isset ($cacheparams->cachegroup)) {
+			$cacheparams->cachegroup = $module->module;
+		}
+
+		$user = JFactory::getUser();
+		$cache = JFactory::getCache($cacheparams->cachegroup, 'callback');
+		$conf = JFactory::getConfig();
+
+		// turn cache off for internal callers if parameters are set to off and for all loged in users
+		if($moduleparams->get('owncache', null) === 0  || $conf->get('caching') == 0 || $user->get('id')) {
+			$cache->setCaching(false);
+		}
+
+		$cache->setLifeTime($moduleparams->get('cache_time', $conf->get('cachetime') * 60));
+
+		$wrkaroundoptions = array (
+			'nopathway' 	=> 1,
+			'nohead' 		=> 0,
+			'nomodules' 	=> 1,
+			'modulemode' 	=> 1,
+			'mergehead' 	=> 1
+		);
+
+		$wrkarounds = true;
+
+		switch ($cacheparams->cachemode) {
+
+			case 'id':
+				$ret = $cache->get(array($cacheparams->class, $cacheparams->method), $cacheparams->methodparams, $cacheparams->modeparams, $wrkarounds, $wrkaroundoptions);
+				break;
+
+			case 'safeuri':
+				$secureid=null;
+				if (is_array($cacheparams->modeparams)) {
+					$uri = JRequest::get();
+					$safeuri = new stdClass();
+					foreach ($cacheparams->modeparams AS $key => $value) {
+						// use int filter for id/catid to clean out spamy slugs
+						if (isset($uri[$key])) {
+							$safeuri->$key = JRequest::_cleanVar($uri[$key], 0,$value);
+						}
+					} }
+				$secureid = md5(serialize(array($safeuri, $cacheparams->method, $moduleparams)));
+				$ret = $cache->get(array($cacheparams->class, $cacheparams->method), $cacheparams->methodparams, $module->id. $user->get('aid', 0).$secureid, $wrkarounds, $wrkaroundoptions);
+				break;
+
+			case 'static':
+				$ret = $cache->get(array($cacheparams->class, $cacheparams->method), $cacheparams->methodparams, $module->module.md5(serialize($cacheparams->methodparams)), $wrkarounds, $wrkaroundoptions);
+				break;
+
+			case 'oldstatic':  // provided for backward compatibility, not really usefull
+				$ret = $cache->get(array($cacheparams->class, $cacheparams->method), $cacheparams->methodparams, $module->id. $user->get('aid', 0), $wrkarounds, $wrkaroundoptions);
+				break;
+
+			case 'itemid':
+			default:
+				$ret = $cache->get(array($cacheparams->class, $cacheparams->method), $cacheparams->methodparams, $module->id. $user->get('aid', 0).JRequest::getVar('Itemid',null,'default','INT'), $wrkarounds, $wrkaroundoptions);
+				break;
+		}
+
+		return $ret;
+	}
+}

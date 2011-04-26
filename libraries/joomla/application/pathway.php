@@ -1,19 +1,14 @@
 <?php
 /**
-* @version		$Id: pathway.php 13354 2009-10-28 02:05:38Z ian $
-* @package		Joomla.Framework
-* @subpackage	Application
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: pathway.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Framework
+ * @subpackage	Application
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
 
 /**
  * Class to maintain a pathway.
@@ -22,7 +17,7 @@ defined('JPATH_BASE') or die();
  * the user's navigated path within the Joomla application.
  *
  * @abstract
- * @package 	Joomla.Framework
+ * @package		Joomla.Framework
  * @subpackage	Application
  * @since		1.5
  */
@@ -50,32 +45,29 @@ class JPathway extends JObject
 	}
 
 	/**
-	 * Returns a reference a JPathway object
-	 *
-	 * This method must be invoked as:
-	 * 		<pre>  $menu = &JPathway::getInstance();</pre>
+	 * Returns a JPathway object
 	 *
 	 * @access	public
-	 * @param   string  $client  The name of the client
-	 * @param array     $options An associative array of options
-	 * @return JPathway 	A pathway object.
+	 * @param	string		$client  The name of the client
+	 * @param	array		$options An associative array of options
+	 * @return	JPathway	A pathway object.
 	 * @since	1.5
 	 */
-	function &getInstance($client, $options = array())
+	static function getInstance($client, $options = array())
 	{
 		static $instances;
 
-		if (!isset( $instances )) {
+		if (!isset($instances)) {
 			$instances = array();
 		}
 
 		if (empty($instances[$client]))
 		{
 			//Load the router object
-			$info =& JApplicationHelper::getClientInfo($client, true);
+			$info = JApplicationHelper::getClientInfo($client, true);
 
 			$path = $info->path.DS.'includes'.DS.'pathway.php';
-			if(file_exists($path))
+			if (file_exists($path))
 			{
 				require_once $path;
 
@@ -85,7 +77,7 @@ class JPathway extends JObject
 			}
 			else
 			{
-				$error = JError::raiseError( 500, 'Unable to load pathway: '.$client);
+				$error = JError::raiseError(500, JText::sprintf('JLIB_APPLICATION_ERROR_PATHWAY_LOAD', $client));
 				return $error;
 			}
 
@@ -138,7 +130,7 @@ class JPathway extends JObject
 	 */
 	function getPathwayNames()
 	{
-		// Initialize variables
+		// Initialise variables.
 		$names = array (null);
 
 		// Build the names array using just the names of each pathway item

@@ -1,113 +1,77 @@
 <?php
 /**
-* @version		$Id: module.php 10381 2008-06-01 03:35:53Z pasamio $
-* @package		Joomla.Framework
-* @subpackage	Table
-* @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
-* @license		GNU/GPL, see LICENSE.php
-* Joomla! is free software. This version may have been modified pursuant
-* to the GNU General Public License, and as distributed it includes or
-* is derivative of works licensed under the GNU General Public License or
-* other free or open source software licenses.
-* See COPYRIGHT.php for copyright notices and details.
-*/
+ * @version		$Id: module.php 20196 2011-01-09 02:40:25Z ian $
+ * @package		Joomla.Framework
+ * @subpackage	Table
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
+ */
 
-// Check to ensure this file is within the rest of the framework
-defined('JPATH_BASE') or die();
+// No direct access
+defined('JPATH_BASE') or die;
+
+jimport('joomla.database.table');
+jimport('joomla.database.tableasset');
 
 /**
  * Module table
  *
- * @package 	Joomla.Framework
- * @subpackage		Table
- * @since	1.0
+ * @package		Joomla.Framework
+ * @subpackage	Table
+ * @since		1.0
  */
 class JTableModule extends JTable
 {
-	/** @var int Primary key */
-	var $id					= null;
-	/** @var string */
-	var $title				= null;
-	/** @var string */
-	var $showtitle			= null;
-	/** @var int */
-	var $content			= null;
-	/** @var int */
-	var $ordering			= null;
-	/** @var string */
-	var $position			= null;
-	/** @var boolean */
-	var $checked_out		= 0;
-	/** @var time */
-	var $checked_out_time	= 0;
-	/** @var boolean */
-	var $published			= null;
-	/** @var string */
-	var $module				= null;
-	/** @var int */
-	var $numnews			= null;
-	/** @var int */
-	var $access				= null;
-	/** @var string */
-	var $params				= null;
-	/** @var string */
-	var $iscore				= null;
-	/** @var string */
-	var $client_id			= null;
-	/** @var string */
-	var $control				= null;
-
 	/**
-	 * Contructore
+	 * Contructor.
 	 *
-	 * @access protected
 	 * @param database A database connector object
 	 */
-	function __construct( &$db ) {
-		parent::__construct( '#__modules', 'id', $db );
+	public function __construct(&$db)
+	{
+		parent::__construct('#__modules', 'id', $db);
+
+		$this->access = (int) JFactory::getConfig()->get('access');
 	}
 
 	/**
-	* Overloaded check function
-	*
-	* @access public
-	* @return boolean True if the object is ok
-	* @see JTable:bind
-	*/
-	function check()
+	 * Overloaded check function.
+	 *
+	 * @return	boolean	True if the object is ok
+	 */
+	public function check()
 	{
 		// check for valid name
-		if (trim( $this->title ) == '') {
-			$this->setError(JText::sprintf( 'must contain a title', JText::_( 'Module') ));
+		if (trim($this->title) == '') {
+			$this->setError(JText::_('JLIB_DATABASE_ERROR_MUSTCONTAIN_A_TITLE_MODULE'));
 			return false;
+		}
+
+		// Check the publish down date is not earlier than publish up.
+		if (intval($this->publish_down) > 0 && $this->publish_down < $this->publish_up) {
+			// Swap the dates.
+			$temp = $this->publish_up;
+			$this->publish_up = $this->publish_down;
+			$this->publish_down = $temp;
 		}
 
 		return true;
 	}
 
 	/**
-	* Overloaded bind function
-	*
-	* @access public
-	* @param array $hash named array
-	* @return null|string	null is operation was satisfactory, otherwise returns an error
-	* @see JTable:bind
-	* @since 1.5
-	*/
-	function bind($array, $ignore = '')
+	 * Overloaded bind function.
+	 *
+	 * @param	array		named array
+	 * @return	null|string	null is operation was satisfactory, otherwise returns an error
+	 * @see		JTable:bind
+	 * @since	1.5
+	 */
+	public function bind($array, $ignore = '')
 	{
-		if (is_array( $array['params'] ))
-		{
+		if (isset($array['params']) && is_array($array['params'])) {
 			$registry = new JRegistry();
 			$registry->loadArray($array['params']);
-			$array['params'] = $registry->toString();
-		}
-
-		if (isset( $array['control'] ) && is_array( $array['control'] ))
-		{
-			$registry = new JRegistry();
-			$registry->loadArray($array['control']);
-			$array['control'] = $registry->toString();
+			$array['params'] = (string)$registry;
 		}
 
 		return parent::bind($array, $ignore);

@@ -1,112 +1,144 @@
 <?php
 /**
- * @version		$Id: search.php 12389 2009-07-01 00:34:45Z ian $
- * @package  Joomla
- * @subpackage	Search
- * @copyright	Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license		GNU/GPL, see LICENSE.php
- * Joomla! is free software. This version may have been modified pursuant to the
- * GNU General Public License, and as distributed it includes or is derivative
- * of works licensed under the GNU General Public License or other free or open
- * source software licenses. See COPYRIGHT.php for copyright notices and
- * details.
+ * @version		$Id: search.php 20228 2011-01-10 00:52:54Z eddieajau $
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
-// Check to ensure this file is included in Joomla!
-defined('_JEXEC') or die( 'Restricted access' );
+// No direct access.
+defined('_JEXEC') or die;
 
 /**
- * @package		Joomla
- * @subpackage	Search
+ * Search component helper.
+ *
+ * @package		Joomla.Administrator
+ * @subpackage	com_search
  */
 class SearchHelper
 {
-	function santiseSearchWord(&$searchword, $searchphrase)
+	/**
+	 * Configure the Linkbar.
+	 *
+	 * @param	string	The name of the active view.
+	 * @since	1.6
+	 */
+	public static function addSubmenu($vName)
+	{
+		// Not required.
+	}
+
+	/**
+	 * Gets a list of the actions that can be performed.
+	 *
+	 * @return	JObject
+	 */
+	public static function getActions()
+	{
+		$user	= JFactory::getUser();
+		$result	= new JObject;
+		$assetName = 'com_search';
+
+		$actions = array(
+			'core.admin', 'core.manage', 'core.create', 'core.edit', 'core.edit.state', 'core.delete'
+		);
+
+		foreach ($actions as $action) {
+			$result->set($action,	$user->authorise($action, $assetName));
+		}
+
+		return $result;
+	}
+
+	static function santiseSearchWord(&$searchword, $searchphrase)
 	{
 		$ignored = false;
 
-		$lang =& JFactory::getLanguage();
+		$lang = JFactory::getLanguage();
 
-		$search_ignore	= array();
 		$tag			= $lang->getTag();
+		$search_ignore	= $lang->getIgnoredSearchWords();
+
+		// Deprecated in 1.6 use $lang->getIgnoredSearchWords instead
 		$ignoreFile		= $lang->getLanguagePath().DS.$tag.DS.$tag.'.ignore.php';
 		if (file_exists($ignoreFile)) {
 			include $ignoreFile;
 		}
 
-	 	// check for words to ignore
-		$aterms = explode( ' ', JString::strtolower( $searchword ) );
+		// check for words to ignore
+		$aterms = explode(' ', JString::strtolower($searchword));
 
 		// first case is single ignored word
-		if ( count( $aterms ) == 1 && in_array( JString::strtolower( $searchword ), $search_ignore ) ) {
+		if (count($aterms) == 1 && in_array(JString::strtolower($searchword), $search_ignore)) {
 			$ignored = true;
 		}
 
 		// filter out search terms that are too small
-		foreach( $aterms AS $aterm ) {
-			if (JString::strlen( $aterm ) < 3) {
+		$lower_limit = $lang->getLowerLimitSearchWord();
+		foreach($aterms AS $aterm) {
+			if (JString::strlen($aterm) < $lower_limit) {
 				$search_ignore[] = $aterm;
 			}
 		}
 
 		// next is to remove ignored words from type 'all' or 'any' (not exact) searches with multiple words
-		if ( count( $aterms ) > 1 && $searchphrase != 'exact' ) {
-			$pruned = array_diff( $aterms, $search_ignore );
-			$searchword = implode( ' ', $pruned );
+		if (count($aterms) > 1 && $searchphrase != 'exact') {
+			$pruned = array_diff($aterms, $search_ignore);
+			$searchword = implode(' ', $pruned);
 		}
 
 		return $ignored;
 	}
 
-	function limitSearchWord(&$searchword)
+	static function limitSearchWord(&$searchword)
 	{
 		$restriction = false;
 
-		// limit searchword to 20 characters
-		if ( JString::strlen( $searchword ) > 20 ) {
-			$searchword 	= JString::substr( $searchword, 0, 19 );
-			$restriction 	= true;
+		$lang = JFactory::getLanguage();
+
+		// limit searchword to a maximum of characters
+		$upper_limit = $lang->getUpperLimitSearchWord();
+		if (JString::strlen($searchword) > $upper_limit) {
+			$searchword		= JString::substr($searchword, 0, $upper_limit - 1);
+			$restriction	= true;
 		}
 
-		// searchword must contain a minimum of 3 characters
-		if ( $searchword && JString::strlen( $searchword ) < 3 ) {
-			$searchword 	= '';
-			$restriction 	= true;
+		// searchword must contain a minimum of characters
+		if ($searchword && JString::strlen($searchword) < $lang->getLowerLimitSearchWord()) {
+			$searchword		= '';
+			$restriction	= true;
 		}
 
 		return $restriction;
 	}
 
-	function logSearch( $search_term )
+	static function logSearch($search_term)
 	{
-		global $mainframe;
+		$db = JFactory::getDbo();
 
-		$db =& JFactory::getDBO();
-
-		$params = &JComponentHelper::getParams( 'com_search' );
+		$params = JComponentHelper::getParams('com_search');
 		$enable_log_searches = $params->get('enabled');
 
-		$search_term = $db->getEscaped( trim( $search_term) );
+		$search_term = $db->getEscaped(trim($search_term));
 
-		if ( @$enable_log_searches )
+		if (@$enable_log_searches)
 		{
-			$db =& JFactory::getDBO();
+			$db = JFactory::getDbo();
 			$query = 'SELECT hits'
 			. ' FROM #__core_log_searches'
-			. ' WHERE LOWER( search_term ) = "'.$search_term.'"'
+			. ' WHERE LOWER(search_term) = "'.$search_term.'"'
 			;
-			$db->setQuery( $query );
-			$hits = intval( $db->loadResult() );
-			if ( $hits ) {
+			$db->setQuery($query);
+			$hits = intval($db->loadResult());
+			if ($hits) {
 				$query = 'UPDATE #__core_log_searches'
-				. ' SET hits = ( hits + 1 )'
-				. ' WHERE LOWER( search_term ) = "'.$search_term.'"'
+				. ' SET hits = (hits + 1)'
+				. ' WHERE LOWER(search_term) = "'.$search_term.'"'
 				;
-				$db->setQuery( $query );
+				$db->setQuery($query);
 				$db->query();
 			} else {
-				$query = 'INSERT INTO #__core_log_searches VALUES ( "'.$search_term.'", 1 )';
-				$db->setQuery( $query );
+				$query = 'INSERT INTO #__core_log_searches VALUES ("'.$search_term.'", 1)';
+				$db->setQuery($query);
 				$db->query();
 			}
 		}
@@ -116,20 +148,19 @@ class SearchHelper
 	 * Prepares results from search for display
 	 *
 	 * @param string The source string
-	 * @param int Number of chars to trim
 	 * @param string The searchword to select around
 	 * @return string
 	 */
-	function prepareSearchContent( $text, $length = 200, $searchword )
+	public static function prepareSearchContent($text, $searchword)
 	{
 		// strips tags won't remove the actual jscript
-		$text = preg_replace( "'<script[^>]*>.*?</script>'si", "", $text );
-		$text = preg_replace( '/{.+?}/', '', $text);
-		//$text = preg_replace( '/<a\s+.*?href="([^"]+)"[^>]*>([^<]+)<\/a>/is','\2', $text );
+		$text = preg_replace("'<script[^>]*>.*?</script>'si", "", $text);
+		$text = preg_replace('/{.+?}/', '', $text);
+		//$text = preg_replace('/<a\s+.*?href="([^"]+)"[^>]*>([^<]+)<\/a>/is','\2', $text);
 		// replace line breaking tags with whitespace
-		$text = preg_replace( "'<(br[^/>]*?/|hr[^/>]*?/|/(div|h[1-6]|li|p|td))>'si", ' ', $text );
+		$text = preg_replace("'<(br[^/>]*?/|hr[^/>]*?/|/(div|h[1-6]|li|p|td))>'si", ' ', $text);
 
-		return SearchHelper::_smartSubstr( strip_tags( $text ), $length, $searchword );
+		return self::_smartSubstr(strip_tags($text), $searchword);
 	}
 
 	/**
@@ -140,7 +171,8 @@ class SearchHelper
 	 * @param array List of object variables to check against
 	 * @returns boolean True if searchTerm is in object, false otherwise
 	 */
-	function checkNoHtml($object, $searchTerm, $fields) {
+	public static function checkNoHtml($object, $searchTerm, $fields)
+	{
 		$searchRegex = array(
 				'#<script[^>]*>.*?</script>#si',
 				'#<style[^>]*>.*?</style>#si',
@@ -148,15 +180,15 @@ class SearchHelper
 				'#<[^>]*>#i'
 				);
 		$terms = explode(' ', $searchTerm);
-		if(empty($fields)) return false;
+		if (empty($fields)) return false;
 		foreach($fields AS $field) {
-			if(!isset($object->$field)) continue;
+			if (!isset($object->$field)) continue;
 			$text = $object->$field;
 			foreach($searchRegex As $regex) {
 				$text = preg_replace($regex, '', $text);
 			}
 			foreach($terms AS $term) {
-				if(JString::stristr($text, $term) !== false) {
+				if (JString::stristr($text, $term) !== false) {
 					return true;
 				}
 			}
@@ -172,8 +204,10 @@ class SearchHelper
 	 * @param string The searchword to select around
 	 * @return string
 	 */
-	function _smartSubstr($text, $length = 200, $searchword)
+	static function _smartSubstr($text, $searchword)
 	{
+		$lang = JFactory::getLanguage();
+		$length = $lang->getSearchDisplayedCharactersNumber();
 		$textlen = JString::strlen($text);
 		$lsearchword = JString::strtolower($searchword);
 		$wordfound = false;
@@ -192,10 +226,10 @@ class SearchHelper
 		}
 
 		if ($wordfound !== false) {
-			return (($pos > 0) ? '...&nbsp;' : '') . $chunk . '&nbsp;...';
+			return (($pos > 0) ? '...&#160;' : '') . $chunk . '&#160;...';
 		} else {
 			if (($wordpos = @JString::strpos($text, ' ', $length)) !== false) {
-				return JString::substr($text, 0, $wordpos) . '&nbsp;...';
+				return JString::substr($text, 0, $wordpos) . '&#160;...';
 			} else {
 				return JString::substr($text, 0, $length);
 			}

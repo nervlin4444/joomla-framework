@@ -1,12 +1,7 @@
 /**
- * CSS Document for offline page
- * @version $Id: error.css 1264 2005-11-30 19:37:13Z Jinx $
- * @package Joomla
- * @copyright Copyright (C) 2005 - 2008 Open Source Matters. All rights reserved.
- * @license GNU/GPL, see LICENSE.php
- * Joomla! is free software and parts of it may contain or be derived from the
- * GNU General Public License or other free or open source software licenses.
- * See COPYRIGHT.php for copyright notices and details.
+ * @version		$Id: error.css 20196 2011-01-09 02:40:25Z ian $
+ * @copyright	Copyright (C) 2005 - 2011 Open Source Matters, Inc. All rights reserved.
+ * @license		GNU General Public License version 2 or later; see LICENSE.txt
  */
 
 .outline {
@@ -31,6 +26,11 @@ body {
 	border:solid 1px #000000;
 	margin-top:13px;
 	margin-bottom:25px;
+}
+
+h1 {
+	color: #cc3333;
+	font-size: 18px;
 }
 
 .table {
